@@ -16,6 +16,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/h2-console/**").permitAll() // Allow access to H2 console
                 .requestMatchers("/test").permitAll()
+                    .requestMatchers("/auth/**").permitAll() // Allow access to authentication endpoints
                 .anyRequest().authenticated()
             )
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))// Require authentication for all other endpoints
