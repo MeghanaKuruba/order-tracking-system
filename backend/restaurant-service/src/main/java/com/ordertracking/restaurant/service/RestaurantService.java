@@ -1,6 +1,7 @@
 package com.ordertracking.restaurant.service;
 
 import com.ordertracking.restaurant.dto.RestaurantRequest;
+import com.ordertracking.restaurant.dto.RestaurantResponse;
 import com.ordertracking.restaurant.entity.Restaurant;
 
 import java.util.List;
@@ -8,10 +9,10 @@ import java.util.List;
 public interface RestaurantService {
 
     Restaurant createRestaurant(RestaurantRequest restaurant);
-
-    List<Restaurant> getAllRestaurants();
-
-    Restaurant getRestaurantByname(String name);
-
-    long getRestaurantById(long id);
+    List<RestaurantResponse> getAllRestaurants();
+    RestaurantResponse getRestaurantByname(String name);
+    RestaurantResponse getRestaurantById(long id);
+    List<RestaurantResponse> searchRestaurants(String cuisineType, Boolean active, String name);
+    RestaurantResponse updateRestaurant(long id, RestaurantRequest restaurant);
+    RestaurantResponse updateRestaurantStatus(long id, boolean active);
 }
