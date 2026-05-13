@@ -7,26 +7,30 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "restaurants")
+@Table(name = "menu_items")
 @Entity
-public class Restaurant {
+public class MenuItem {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
     private String name;
-    @NotNull
-    private String address;
-    private String cuisineType;
-    private boolean active;
 
+    @NotNull
+    private String description;
+
+    @NotNull
+    private double price;
+
+    private boolean available;
+
+    @ManyToOne
+    @JoinColumn(name = "restaurant_id", nullable = false)
     @JsonIgnore
-    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MenuItem> menuItems;
+    private Restaurant restaurant;
 }
