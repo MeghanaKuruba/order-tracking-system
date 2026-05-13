@@ -23,9 +23,14 @@ public class GlobalExceptionHandler {
      }
 
      @ExceptionHandler(RestaurantAlreadyExistsException.class)
-        public ResponseEntity<ErrorResponse> handleRestaurantAlreadyExistsException(
-                RestaurantAlreadyExistsException ex, HttpServletRequest request) {
-            return buildErrorResponse(HttpStatus.CONFLICT, "Restaurant Already Exists", ex.getMessage(), request);
+     public ResponseEntity<ErrorResponse> handleRestaurantAlreadyExistsException(
+             RestaurantAlreadyExistsException ex, HttpServletRequest request) {
+         return buildErrorResponse(HttpStatus.CONFLICT, "Restaurant Already Exists", ex.getMessage(), request);
+     }
+     @ExceptionHandler(MenuItemAlreadyExistsException.class)
+        public ResponseEntity<ErrorResponse> handleMenuItemAlreadyExistsException(
+                MenuItemAlreadyExistsException ex, HttpServletRequest request) {
+            return buildErrorResponse(HttpStatus.CONFLICT, "Menu Item Already Exists", ex.getMessage(), request);
         }
 
     private ResponseEntity<ErrorResponse> buildErrorResponse(
