@@ -1,5 +1,6 @@
 package com.ordertracking.restaurant.service.impl;
 
+import com.ordertracking.restaurant.Exception.NoChangesFoundException;
 import com.ordertracking.restaurant.Exception.RestaurantAlreadyExistsException;
 import com.ordertracking.restaurant.Exception.RestaurantNotFoundException;
 import com.ordertracking.restaurant.dto.RestaurantRequest;
@@ -73,9 +74,29 @@ public class RestaurantServiceImpl implements RestaurantService {
         Restaurant existingRestaurant = restaurantRepository.findById(id)
                 .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with id: " + id));
 
-        existingRestaurant.setName(restaurant.getName());
-        existingRestaurant.setAddress(restaurant.getAddress());
-        existingRestaurant.setCuisineType(restaurant.getCuisineType());
+        boolean changed = false;
+
+        if(restaurant.getName() != null && !restaurant.getName().isBlank()
+                && !restaurant.getName().equalsIgnoreCase(existingRestaurant.getName())) {
+            if(restaurantRepository.findByName(restaurant.getName()) != null) {
+                throw new RestaurantAlreadyExistsException("Restaurant with name " + restaurant.getName() + " already exists");
+            }
+            existingRestaurant.setName(restaurant.getName());
+                changed = true;
+        }
+        if(restaurant.getAddress() != null && !restaurant.getAddress().isBlank()
+                && !restaurant.getAddress().equalsIgnoreCase(existingRestaurant.getAddress())) {
+            existingRestaurant.setAddress(restaurant.getAddress());
+                changed = true;
+        }
+        if (restaurant.getCuisineType() != null && !restaurant.getCuisineType().isBlank()
+                && !restaurant.getCuisineType().equalsIgnoreCase(existingRestaurant.getCuisineType())) {
+            existingRestaurant.setCuisineType(restaurant.getCuisineType());
+                changed = true;
+        }
+        if (!changed) {
+            throw new NoChangesFoundException("No changes detected. Restaurant is already up to date.");
+        }
 
         Restaurant updatedRestaurant = restaurantRepository.save(existingRestaurant);
         return mapToResponse(updatedRestaurant);
