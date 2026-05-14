@@ -28,10 +28,22 @@ public class GlobalExceptionHandler {
          return buildErrorResponse(HttpStatus.CONFLICT, "Restaurant Already Exists", ex.getMessage(), request);
      }
      @ExceptionHandler(MenuItemAlreadyExistsException.class)
-        public ResponseEntity<ErrorResponse> handleMenuItemAlreadyExistsException(
-                MenuItemAlreadyExistsException ex, HttpServletRequest request) {
-            return buildErrorResponse(HttpStatus.CONFLICT, "Menu Item Already Exists", ex.getMessage(), request);
-        }
+     public ResponseEntity<ErrorResponse> handleMenuItemAlreadyExistsException(
+             MenuItemAlreadyExistsException ex, HttpServletRequest request) {
+         return buildErrorResponse(HttpStatus.CONFLICT, "Menu Item Already Exists", ex.getMessage(), request);
+     }
+
+     @ExceptionHandler(MenuItemNotFoundException.class)
+     public ResponseEntity<ErrorResponse> handleMenuItemNotFoundException(
+             MenuItemNotFoundException ex, HttpServletRequest request) {
+         return buildErrorResponse(HttpStatus.NOT_FOUND, "Menu Item Not Found", ex.getMessage(), request);
+     }
+
+     @ExceptionHandler(NoChangesFoundException.class)
+     public ResponseEntity<ErrorResponse> handleNoChangesFoundException(
+             NoChangesFoundException ex, HttpServletRequest request) {
+         return buildErrorResponse(HttpStatus.BAD_REQUEST, "No Changes Found", ex.getMessage(), request);
+     }
 
     private ResponseEntity<ErrorResponse> buildErrorResponse(
             HttpStatus status, String error, String message, HttpServletRequest request) {
