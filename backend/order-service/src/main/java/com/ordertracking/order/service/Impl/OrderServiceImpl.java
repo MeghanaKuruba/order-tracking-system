@@ -1,14 +1,15 @@
 package com.ordertracking.order.service.Impl;
 
-import com.ordertracking.order.dto.AddressRequest;
-import com.ordertracking.order.dto.OrderItemRequest;
-import com.ordertracking.order.dto.OrderResponse;
-import com.ordertracking.order.dto.PlaceOrderRequest;
+import com.ordertracking.order.dto.*;
 import com.ordertracking.order.entity.Address;
 import com.ordertracking.order.entity.Order;
 import com.ordertracking.order.entity.OrderItem;
 import com.ordertracking.order.entity.OrderStatus;
+import com.ordertracking.order.exception.EnumError;
 import com.ordertracking.order.exception.InvalidOrderException;
+import com.ordertracking.order.exception.OrderCancellationNotAllowedException;
+import com.ordertracking.order.exception.OrderNotFoundException;
+import com.ordertracking.order.mapper.OrderMapper;
 import com.ordertracking.order.repository.OrderRepository;
 import com.ordertracking.order.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -18,15 +19,18 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
+
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
+
+    private final OrderMapper orderMapper;
     @Override
     public OrderResponse placeOrder(PlaceOrderRequest request) {
 
-        if(request.getOrderItems() == null || request.getOrderItems().length == 0) {
+        if(request.getOrderItems() == null || request.getOrderItems().isEmpty()) {
             throw new InvalidOrderException("Order must contain at least one item");
         }
 
@@ -70,38 +74,26 @@ public class OrderServiceImpl implements OrderService {
         order.setCreatedAt(LocalDateTime.now());
 
         // Map AddressRequest to Address entity
-        AddressRequest addrRequest = request.getDeliveryAddress();
+        order.setDeliveryAddress(orderMapper.mapToAddressEntity(request.getDeliveryAddress()));
 
-        Address address = new Address();
-        address.setStreet(addrRequest.getStreet());
-        address.setCity(addrRequest.getCity());
-        address.setState(addrRequest.getState());
-        address.setPinCode(addrRequest.getPinCode());
-        address.setCountry(addrRequest.getCountry());
+        // Map OrderItemRequest to OrderItem entities
 
-        order.setDeliveryAddress(address);
-
-        // Map OrderItemRequest to OrderItem entities and calculate total amount
-        BigDecimal totalAmount = BigDecimal.ZERO;
-
-        List<OrderItem> orderItems = Arrays.stream(request.getOrderItems()).map(itemReq -> {
+        List<OrderItem> orderItems = request.getOrderItems().stream().map(itemReq ->  {
 
             if(itemReq.getQuantity() <= 0) {
-                throw new IllegalArgumentException("Item quantity must be greater than zero");
+                throw new InvalidOrderException("Item quantity must be greater than zero");
             }
             if(itemReq.getPrice().compareTo(BigDecimal.ZERO) <= 0 || itemReq.getPrice() == null) {
-                throw new IllegalArgumentException("Item price must be greater than zero");
+                throw new InvalidOrderException("Item price must be greater than zero");
             }
-            OrderItem item = new OrderItem();
-            item.setMenuItemId(itemReq.getMenuItemId());
-            item.setQuantity(itemReq.getQuantity());
-            item.setPrice(itemReq.getPrice());
-
-            item.setOrder(order);
-            return item;
+            return orderMapper.mapToOrderItemEntity(itemReq, order);
         }).toList();
 
+        order.setItems(orderItems);
+
+
         // Calculate total amount
+            BigDecimal totalAmount = BigDecimal.ZERO;
         for (OrderItem item : orderItems){
             BigDecimal itemTotal = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
             totalAmount = totalAmount.add(itemTotal);
@@ -115,9 +107,59 @@ public class OrderServiceImpl implements OrderService {
 
         // create response DTO
         return new OrderResponse(
-                savedOrder.getId(),
+                savedOrder.getOrderId(),
                 savedOrder.getStatus(),
                 savedOrder.getTotalAmount(),
                 savedOrder.getCreatedAt());
     }
+
+    @Override
+    public OrderDetailsResponse getOrderById(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
+
+        return orderMapper.mapToOrderDetailsResponse(order);
+    }
+
+    @Override
+    public List<OrderSummaryResponse> getOrdersByCustomerId(String customerId) {
+        return orderRepository.findByCustomerId(customerId)
+                .stream()
+                .map(orderMapper::mapToOrderSummaryResponse)
+                .toList();
+    }
+
+    @Override
+    public OrderDetailsResponse updateOrderStatus(Long orderId, String status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
+
+        try {
+            OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase());
+            order.setStatus(newStatus);
+            Order updatedOrder = orderRepository.save(order);
+            return orderMapper.mapToOrderDetailsResponse(updatedOrder);
+        } catch (IllegalArgumentException e) {
+            throw new EnumError("Invalid order status: " + status);
+        }
+    }
+
+    @Override
+    public OrderDetailsResponse cancelOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
+
+        if (order.getStatus() == OrderStatus.PREPARING ||
+                order.getStatus() == OrderStatus.READY_FOR_PICKUP ||
+                order.getStatus() == OrderStatus.OUT_FOR_DELIVERY ||
+                order.getStatus() == OrderStatus.DELIVERED) {
+
+            throw new OrderCancellationNotAllowedException("Order cannot be cancelled at this stage. Current status: " + order.getStatus());
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+        Order cancelledOrder = orderRepository.save(order);
+        return orderMapper.mapToOrderDetailsResponse(cancelledOrder);
+    }
+
 }

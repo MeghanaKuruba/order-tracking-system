@@ -16,7 +16,7 @@ public class MenuItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long menuItemId;
 
     @NotNull
     private String name;
@@ -30,7 +30,7 @@ public class MenuItem {
     private boolean available;
 
     @ManyToOne
-    @JoinColumn(name = "restaurant_id", nullable = false)
+    @JoinColumn(name = "restaurant_restaurantId", nullable = false)
     @JsonIgnore
     private Restaurant restaurant;
 }
