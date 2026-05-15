@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 
@@ -21,6 +22,22 @@ public class GlobalExceptionHandler {
          return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid Order", ex.getMessage(), request);
      }
 
+     @ExceptionHandler(OrderNotFoundException.class)
+     public ResponseEntity<ErrorResponse> handleOrderNotFoundException(
+             OrderNotFoundException ex, HttpServletRequest request) {
+         return buildErrorResponse(HttpStatus.NOT_FOUND, "Order Not Found", ex.getMessage(), request);
+     }
+
+     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+     public ResponseEntity<ErrorResponse> handleEnumError(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid Parameter", ex.getMessage(), request);
+     }
+
+     @ExceptionHandler(OrderCancellationNotAllowedException.class)
+     public ResponseEntity<ErrorResponse> handleOrderCancellationNotAllowedException(
+             OrderCancellationNotAllowedException ex, HttpServletRequest request) {
+         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Order Cancellation Not Allowed", ex.getMessage(), request);
+     }
     private ResponseEntity<ErrorResponse> buildErrorResponse(
             HttpStatus status, String error, String message, HttpServletRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
