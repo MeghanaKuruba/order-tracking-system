@@ -24,24 +24,34 @@ public class AuthServiceImpl implements AuthService {
 
     private final JwtUtil jwtUtil;
 
-        @Override
-        public String register(RegisterRequest request) {
-            if(userRepository.existsByEmail(request.getEmail())) {
-                throw new DuplicateEmailException("Email already exists: "+ request.getEmail());
-            }
-
-            User user = User.builder()
-                    .name(request.getName())
-                    .email(request.getEmail())
-                    .password(passwordEncoder.encode(request.getPassword()))
-                    .role(request.getRole() != null ? request.getRole() : "USER")
-                    .build();
-
-            userRepository.save(user);
-
-            return "User registered successfully";
+    /**
+     * Register a new user. Validates the registration request, checks for duplicate email, encodes the password, and saves the user to the database. Throws exception if email already exists.
+     * @param request
+     * @return
+     */
+    @Override
+    public String register(RegisterRequest request) {
+        if(userRepository.existsByEmail(request.getEmail())) {
+            throw new DuplicateEmailException("Email already exists: "+ request.getEmail());
         }
 
+        User user = User.builder()
+                .name(request.getName())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(request.getRole() != null ? request.getRole() : "USER")
+                .build();
+
+        userRepository.save(user);
+
+        return "User registered successfully";
+    }
+
+    /**
+     * Authenticate user and generate JWT token. Validates the login request, checks if user exists, verifies the password, and generates a JWT token. Throws exception if user not found or if password is invalid.
+     * @param request
+     * @return
+     */
     @Override
     public AuthResponse login(LoginRequest request) {
 
