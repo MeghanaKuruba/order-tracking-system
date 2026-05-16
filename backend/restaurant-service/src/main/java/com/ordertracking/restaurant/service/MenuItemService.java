@@ -13,4 +13,5 @@ public interface MenuItemService {
     MenuItemResponse updateMenuItem(long menuItemId, MenuItemUpdateRequest menuItemRequest);
     void deleteMenuItem(long restaurantId, long menuItemId);
     MenuItemResponse UpdateMenuItemAvailability(long menuItemId, boolean available);
+    MenuItemResponse getMenuItemById(long menuItemId);
 }

@@ -25,6 +25,13 @@ public class MenuItemServiceImpl implements MenuItemService {
     private final MenuItemRepository menuItemRepository;
 
     private final RestaurantRepository restaurantRepository;
+
+    /**
+     * Add new menu item to a restaurant. Throws exception if restaurant not found or if a menu item with the same name already exists for the restaurant.
+     * @param restaurantId
+     * @param menuItemRequest
+     * @return
+     */
     @Override
     public MenuItemResponse addMenuItem(long restaurantId, MenuItemRequest menuItemRequest) {
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
@@ -42,6 +49,11 @@ public class MenuItemServiceImpl implements MenuItemService {
         return mapToResponse(menuItem);
     }
 
+    /**
+     * Get all menu items for a restaurant. Throws exception if restaurant not found.
+     * @param restaurantId
+     * @return
+     */
     @Override
     public List<MenuItemResponse> getMenuItemsByRestaurantId(long restaurantId) {
         restaurantRepository.findById(restaurantId)
@@ -51,6 +63,12 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     }
 
+    /**
+     * Update menu item details. Only non-null and changed fields will be updated. If no changes are detected, an exception is thrown.
+     * @param menuItemId
+     * @param menuItemRequest
+     * @return
+     */
     @Override
     public MenuItemResponse updateMenuItem(long menuItemId, MenuItemUpdateRequest menuItemRequest) {
             MenuItem menuItem = menuItemRepository.findById(menuItemId)
@@ -79,6 +97,11 @@ public class MenuItemServiceImpl implements MenuItemService {
             return mapToResponse(updated);
     }
 
+    /**
+     * Delete menu item by ID
+     * @param restaurantId
+     * @param menuItemId
+     */
     @Override
     public void deleteMenuItem(long restaurantId, long menuItemId) {
         restaurantRepository.findById(restaurantId)
@@ -88,6 +111,12 @@ public class MenuItemServiceImpl implements MenuItemService {
         menuItemRepository.delete(menuItem);
     }
 
+    /**
+     * Update menu item availability
+     * @param menuItemId
+     * @param available
+     * @return
+     */
     @Override
     public MenuItemResponse UpdateMenuItemAvailability(long menuItemId, boolean available) {
         MenuItem menuItem = menuItemRepository.findById(menuItemId)
@@ -97,6 +126,23 @@ public class MenuItemServiceImpl implements MenuItemService {
         return mapToResponse(updated);
     }
 
+    /**
+     * Get menu item details by ID
+     * @param menuItemId
+     * @return
+     */
+    @Override
+    public MenuItemResponse getMenuItemById(long menuItemId) {
+        MenuItem menuItem = menuItemRepository.findById(menuItemId)
+                .orElseThrow(() -> new MenuItemNotFoundException("Menu item not found with id: " + menuItemId));
+        return mapToResponse(menuItem);
+    }
+
+    /**
+     * Map MenuItem entity to MenuItemResponse DTO.
+     * @param menuItem
+     * @return
+     */
     private MenuItemResponse mapToResponse(MenuItem menuItem) {
         MenuItemResponse response = new MenuItemResponse();
         response.setId(menuItem.getMenuItemId());

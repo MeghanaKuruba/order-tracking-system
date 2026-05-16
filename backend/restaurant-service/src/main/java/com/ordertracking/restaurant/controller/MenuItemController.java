@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/menuItems")
@@ -22,7 +24,7 @@ public class MenuItemController {
     }
 
     @GetMapping("/restaurant/{restaurantId}")
-    public ResponseEntity<?> getMenuItemsByRestaurantId(@PathVariable long restaurantId) {
+    public ResponseEntity<List<MenuItemResponse>> getMenuItemsByRestaurantId(@PathVariable long restaurantId) {
         return ResponseEntity.ok(MenuItemService.getMenuItemsByRestaurantId(restaurantId));
     }
 
@@ -41,6 +43,12 @@ public class MenuItemController {
     @PatchMapping("/{menuItemId}/availability")
     public ResponseEntity<MenuItemResponse> updateMenuItemAvailability(@PathVariable long menuItemId, @RequestParam boolean available) {
         MenuItemResponse response = MenuItemService.UpdateMenuItemAvailability(menuItemId, available);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{menuItemId}")
+    public ResponseEntity<MenuItemResponse> getMenuItemById(@PathVariable long menuItemId) {
+        MenuItemResponse response = MenuItemService.getMenuItemById(menuItemId);
         return ResponseEntity.ok(response);
     }
 }
