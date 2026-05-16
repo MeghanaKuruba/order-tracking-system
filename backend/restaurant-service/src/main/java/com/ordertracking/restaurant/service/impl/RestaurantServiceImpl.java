@@ -18,6 +18,12 @@ import java.util.List;
 public class RestaurantServiceImpl implements RestaurantService {
 
     private final RestaurantRepository restaurantRepository;
+
+    /**
+     * Create a new restaurant. Throws exception if a restaurant with the same name already exists.
+     * @param request
+     * @return
+     */
     @Override
     public Restaurant createRestaurant(RestaurantRequest request) {
         if(restaurantRepository.findByName(request.getName()) != null) {
@@ -31,12 +37,22 @@ public class RestaurantServiceImpl implements RestaurantService {
         return restaurantRepository.save(restaurant);
     }
 
+    /**
+     * Get all restaurants. Returns an empty list if no restaurants are found.
+     * @return
+     */
+
     @Override
     public List<RestaurantResponse> getAllRestaurants() {
         List<Restaurant> restaurant = restaurantRepository.findAll();
         return restaurant.stream().map(this::mapToResponse).toList();
     }
 
+    /**
+     * Get restaurant by name. Throws exception if restaurant not found.
+     * @param name
+     * @return
+     */
     @Override
     public RestaurantResponse getRestaurantByname(String name) {
             Restaurant restaurant = restaurantRepository.findByName(name);
@@ -47,6 +63,11 @@ public class RestaurantServiceImpl implements RestaurantService {
         return mapToResponse(restaurant);
     }
 
+    /**
+     * Get restaurant by id. Throws exception if restaurant not found.
+     * @param id
+     * @return
+     */
     @Override
     public RestaurantResponse getRestaurantById(long id) {
         Restaurant restaurant = restaurantRepository.findById(id)
@@ -54,6 +75,13 @@ public class RestaurantServiceImpl implements RestaurantService {
         return mapToResponse(restaurant);
     }
 
+    /**
+     * Search restaurants by cuisine type, active status or name. If no parameters are provided, returns all restaurants. Returns an empty list if no restaurants are found.
+     * @param cuisineType
+     * @param active
+     * @param name
+     * @return
+     */
     @Override
     public List<RestaurantResponse> searchRestaurants(String cuisineType, Boolean active, String name) {
         List<Restaurant> restaurants;
@@ -69,6 +97,12 @@ public class RestaurantServiceImpl implements RestaurantService {
         return restaurants.stream().map(this::mapToResponse).toList();
     }
 
+    /**
+     * Update restaurant details. Only non-null and changed fields will be updated. If no changes are detected, an exception is thrown. Throws exception if restaurant not found or if a restaurant with the same name already exists.
+     * @param id
+     * @param restaurant
+     * @return
+     */
     @Override
     public RestaurantResponse updateRestaurant(long id, RestaurantRequest restaurant) {
         Restaurant existingRestaurant = restaurantRepository.findById(id)
@@ -102,6 +136,12 @@ public class RestaurantServiceImpl implements RestaurantService {
         return mapToResponse(updatedRestaurant);
     }
 
+    /**
+     * Activate or deactivate a restaurant. Throws exception if restaurant not found.
+     * @param id
+     * @param active
+     * @return
+     */
     @Override
     public RestaurantResponse updateRestaurantStatus(long id, boolean active) {
         Restaurant existingRestaurant = restaurantRepository.findById(id)
@@ -112,6 +152,11 @@ public class RestaurantServiceImpl implements RestaurantService {
         return mapToResponse(updatedRestaurant);
     }
 
+    /**
+     * Map Restaurant entity to RestaurantResponse DTO.
+     * @param restaurant
+     * @return
+     */
     private RestaurantResponse mapToResponse(Restaurant restaurant) {
         RestaurantResponse response = new RestaurantResponse();
         response.setId(restaurant.getRestaurantId());
