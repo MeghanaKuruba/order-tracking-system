@@ -27,6 +27,12 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
 
     private final OrderMapper orderMapper;
+
+    /**
+     * Place a new order. Validates the order request, calculates total amount, and saves the order to the database. Throws exception if the order request is invalid.
+     * @param request
+     * @return
+     */
     @Override
     public OrderResponse placeOrder(PlaceOrderRequest request) {
 
@@ -113,6 +119,11 @@ public class OrderServiceImpl implements OrderService {
                 savedOrder.getCreatedAt());
     }
 
+    /**
+     * Get order details by ID. Throws exception if order not found.
+     * @param orderId
+     * @return
+     */
     @Override
     public OrderDetailsResponse getOrderById(Long orderId) {
         Order order = orderRepository.findById(orderId)
@@ -121,6 +132,11 @@ public class OrderServiceImpl implements OrderService {
         return orderMapper.mapToOrderDetailsResponse(order);
     }
 
+    /**
+     * Get all orders for a specific customer. Returns an empty list if no orders are found for the customer.
+     * @param customerId
+     * @return
+     */
     @Override
     public List<OrderSummaryResponse> getOrdersByCustomerId(String customerId) {
         return orderRepository.findByCustomerId(customerId)
@@ -129,6 +145,12 @@ public class OrderServiceImpl implements OrderService {
                 .toList();
     }
 
+    /**
+     * Update the status of an order. Validates the new status and updates the order if valid. Throws exception if order not found or if the new status is invalid.
+     * @param orderId
+     * @param status
+     * @return
+     */
     @Override
     public OrderDetailsResponse updateOrderStatus(Long orderId, String status) {
         Order order = orderRepository.findById(orderId)
@@ -144,6 +166,11 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * Cancel an order. Only orders that are in CREATED or ACCEPTED status can be cancelled. Throws exception if order not found or if the order cannot be cancelled due to its current status.
+     * @param orderId
+     * @return
+     */
     @Override
     public OrderDetailsResponse cancelOrder(Long orderId) {
         Order order = orderRepository.findById(orderId)
