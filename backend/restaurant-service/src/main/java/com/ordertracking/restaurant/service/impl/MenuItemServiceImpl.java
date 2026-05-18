@@ -145,12 +145,12 @@ public class MenuItemServiceImpl implements MenuItemService {
      */
     private MenuItemResponse mapToResponse(MenuItem menuItem) {
         MenuItemResponse response = new MenuItemResponse();
-        response.setId(menuItem.getMenuItemId());
+        response.setId(menuItem.getId());
         response.setName(menuItem.getName());
         response.setDescription(menuItem.getDescription());
         response.setPrice(menuItem.getPrice());
         response.setAvailable(menuItem.isAvailable());
-        response.setRestaurantId(menuItem.getRestaurant().getRestaurantId());
+        response.setRestaurantId(menuItem.getRestaurant().getId());
 
         return response;
     }

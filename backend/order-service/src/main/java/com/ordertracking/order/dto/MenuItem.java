@@ -9,7 +9,10 @@ import java.math.BigDecimal;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class OrderItemRequest {
-    private Long menuItemId;
-    private int quantity;
+public class MenuItem {
+    private Long id;
+    private String name;
+    private BigDecimal price;
+    private boolean available;
+    private Long restaurantId;
 }

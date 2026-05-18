@@ -6,6 +6,8 @@ import com.ordertracking.order.entity.Order;
 import com.ordertracking.order.entity.OrderItem;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+
 @Component
 public class OrderMapper {
 
@@ -63,14 +65,14 @@ public class OrderMapper {
         return address;
     }
 
-    public OrderItem mapToOrderItemEntity(OrderItemRequest request, Order order) {
+    public OrderItem mapToOrderItemEntity(OrderItemRequest request, Order order, BigDecimal price) {
         if (request == null) {
             return null;
         }
         OrderItem item = new OrderItem();
         item.setMenuItemId(request.getMenuItemId());
         item.setQuantity(request.getQuantity());
-        item.setPrice(request.getPrice());
+        item.setPrice(price);
         item.setOrder(order);
         return item;
     }
