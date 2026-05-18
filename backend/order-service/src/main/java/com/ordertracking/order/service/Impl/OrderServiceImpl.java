@@ -14,6 +14,8 @@ import com.ordertracking.order.repository.OrderRepository;
 import com.ordertracking.order.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,6 +27,8 @@ import java.util.*;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
+
+    private final RestTemplate restTemplate;
 
     private final OrderMapper orderMapper;
 
@@ -84,29 +88,55 @@ public class OrderServiceImpl implements OrderService {
 
         // Map OrderItemRequest to OrderItem entities
 
-        List<OrderItem> orderItems = request.getOrderItems().stream().map(itemReq ->  {
+        BigDecimal totalAmount = BigDecimal.ZERO;
+
+        List<OrderItem> orderItems = new ArrayList<>();
+        for(OrderItemRequest itemReq : request.getOrderItems()) {
 
             if(itemReq.getQuantity() <= 0) {
                 throw new InvalidOrderException("Item quantity must be greater than zero");
             }
-            if(itemReq.getPrice().compareTo(BigDecimal.ZERO) <= 0 || itemReq.getPrice() == null) {
-                throw new InvalidOrderException("Item price must be greater than zero");
+
+            String url = "http://localhost:8080/menuItems/" + itemReq.getMenuItemId();
+
+            System.out.println("Calling restaurant service url: " + url);
+
+            MenuItem menuItem;
+
+            try {
+                 menuItem = restTemplate.getForObject(url, MenuItem.class);
+            }catch (HttpClientErrorException e) {
+                 if(e.getStatusCode().is4xxClientError()) {
+                     throw new InvalidOrderException("Menu item not found with ID: " + itemReq.getMenuItemId());
+                 } else {
+                     throw new InvalidOrderException("Error fetching menu item with ID: " + itemReq.getMenuItemId() + ". Please try again later.");
+                 }
+            } catch (Exception e) {
+                throw new InvalidOrderException("Restaurant service is unavailable. Please try again later.");
             }
-            return orderMapper.mapToOrderItemEntity(itemReq, order);
-        }).toList();
+            if (menuItem == null) {
+                throw new InvalidOrderException("Menu item not found with ID: " + itemReq.getMenuItemId());
+            }
+            if (!menuItem.isAvailable()) {
+                throw new InvalidOrderException("Menu item with ID " + itemReq.getMenuItemId() + " is not available");
+            }
+            if (!menuItem.getRestaurantId().equals(request.getRestaurantId())) {
+                throw new InvalidOrderException("Menu item with ID " + itemReq.getMenuItemId() + " does not belong to restaurant with ID " + request.getRestaurantId());
+            }
 
-        order.setItems(orderItems);
+            BigDecimal itemPrice = menuItem.getPrice();
+            BigDecimal itemTotalPrice = itemPrice.multiply(BigDecimal.valueOf(itemReq.getQuantity()));
 
+            totalAmount = totalAmount.add(itemTotalPrice);
 
-        // Calculate total amount
-            BigDecimal totalAmount = BigDecimal.ZERO;
-        for (OrderItem item : orderItems){
-            BigDecimal itemTotal = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
-            totalAmount = totalAmount.add(itemTotal);
+            OrderItem orderItem = orderMapper.mapToOrderItemEntity(itemReq, order, itemPrice);
+
+            orderItems.add(orderItem);
         }
 
-        order.setTotalAmount(totalAmount);
         order.setItems(orderItems);
+
+        order.setTotalAmount(totalAmount);
 
         // save order to database
         Order savedOrder = orderRepository.save(order);
@@ -189,4 +219,45 @@ public class OrderServiceImpl implements OrderService {
         return orderMapper.mapToOrderDetailsResponse(cancelledOrder);
     }
 
+    /**
+     * Get all orders for a specific restaurant. Returns an empty list if no orders are found for the restaurant.
+     * @param restaurantId
+     * @return
+     */
+    @Override
+    public List<OrderSummaryResponse> getOrdersByRestaurantId(Long restaurantId) {
+        List<Order> orders = orderRepository.findByRestaurantId(restaurantId);
+
+        return orders.stream()
+                .map(orderMapper::mapToOrderSummaryResponse)
+                .toList();
+    }
+
+    @Override
+    public OrderDetailsResponse acceptOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
+
+        if (order.getStatus() != OrderStatus.CREATED) {
+            throw new InvalidOrderException("Only orders in CREATED status can be accepted. Current status: " + order.getStatus());
+        }
+
+        order.setStatus(OrderStatus.ACCEPTED);
+        Order acceptedOrder = orderRepository.save(order);
+        return orderMapper.mapToOrderDetailsResponse(acceptedOrder);
+    }
+
+    @Override
+    public OrderDetailsResponse rejectOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
+
+        if (order.getStatus() != OrderStatus.CREATED) {
+            throw new InvalidOrderException("Only orders in CREATED status can be rejected. Current status: " + order.getStatus());
+        }
+
+        order.setStatus(OrderStatus.REJECTED);
+        Order rejectedOrder = orderRepository.save(order);
+        return orderMapper.mapToOrderDetailsResponse(rejectedOrder);
+    }
 }

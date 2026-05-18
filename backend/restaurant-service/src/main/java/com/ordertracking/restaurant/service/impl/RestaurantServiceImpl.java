@@ -159,7 +159,7 @@ public class RestaurantServiceImpl implements RestaurantService {
      */
     private RestaurantResponse mapToResponse(Restaurant restaurant) {
         RestaurantResponse response = new RestaurantResponse();
-        response.setId(restaurant.getRestaurantId());
+        response.setId(restaurant.getId());
         response.setName(restaurant.getName());
         response.setAddress(restaurant.getAddress());
         response.setCuisineType(restaurant.getCuisineType());
