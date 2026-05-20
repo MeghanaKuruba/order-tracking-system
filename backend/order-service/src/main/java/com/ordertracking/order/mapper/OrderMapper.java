@@ -89,4 +89,17 @@ public class OrderMapper {
         response.setCreatedAt(order.getCreatedAt());
         return response;
     }
+
+    public OrderCreatedEvent mapToOrderCreatedEvent(Order order) {
+        if (order == null) {
+            return null;
+        }
+        return  new OrderCreatedEvent(
+                order.getOrderId(),
+                order.getCustomerId(),
+                order.getRestaurantId(),
+                order.getStatus().name(),
+                order.getTotalAmount()
+        );
+    }
 }
