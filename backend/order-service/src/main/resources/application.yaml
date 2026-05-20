@@ -5,20 +5,26 @@ spring:
   application:
     name: order-service
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
   datasource:
     url: jdbc:h2:mem:authdb
     username: sa
     password:
     driver-class-name: org.h2.Driver
 
-    h2:
-      console:
-        enabled: true
+  h2:
+    console:
+      enabled: true
 
-    jpa:
-      hibernate:
-        ddl-auto: update
-      show-sql: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
 
 management:
   endpoints:

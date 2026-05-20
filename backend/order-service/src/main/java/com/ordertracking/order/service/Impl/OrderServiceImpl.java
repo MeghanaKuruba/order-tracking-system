@@ -9,6 +9,7 @@ import com.ordertracking.order.exception.EnumError;
 import com.ordertracking.order.exception.InvalidOrderException;
 import com.ordertracking.order.exception.OrderCancellationNotAllowedException;
 import com.ordertracking.order.exception.OrderNotFoundException;
+import com.ordertracking.order.kafka.OrderEventProducer;
 import com.ordertracking.order.mapper.OrderMapper;
 import com.ordertracking.order.repository.OrderRepository;
 import com.ordertracking.order.service.OrderService;
@@ -31,6 +32,9 @@ public class OrderServiceImpl implements OrderService {
     private final RestTemplate restTemplate;
 
     private final OrderMapper orderMapper;
+    private final String restaurantServiceUrl = "http://localhost:8080/menuItems/";
+
+    private final OrderEventProducer orderEventProducer;
 
     /**
      * Place a new order. Validates the order request, calculates total amount, and saves the order to the database. Throws exception if the order request is invalid.
@@ -97,7 +101,7 @@ public class OrderServiceImpl implements OrderService {
                 throw new InvalidOrderException("Item quantity must be greater than zero");
             }
 
-            String url = "http://localhost:8080/menuItems/" + itemReq.getMenuItemId();
+            String url = restaurantServiceUrl + itemReq.getMenuItemId();
 
             System.out.println("Calling restaurant service url: " + url);
 
@@ -140,6 +144,9 @@ public class OrderServiceImpl implements OrderService {
 
         // save order to database
         Order savedOrder = orderRepository.save(order);
+
+        OrderCreatedEvent event = orderMapper.mapToOrderCreatedEvent(savedOrder);
+        orderEventProducer.sendOrderCreatedEvent(event);
 
         // create response DTO
         return new OrderResponse(
