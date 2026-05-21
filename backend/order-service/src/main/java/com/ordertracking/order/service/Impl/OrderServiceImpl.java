@@ -240,6 +240,11 @@ public class OrderServiceImpl implements OrderService {
                 .toList();
     }
 
+    /**
+     * Accept an order. Only orders that are in CREATED status can be accepted. Throws exception if order not found or if the order cannot be accepted due to its current status.
+     * @param orderId
+     * @return
+     */
     @Override
     public OrderDetailsResponse acceptOrder(Long orderId) {
         Order order = orderRepository.findById(orderId)
@@ -254,6 +259,11 @@ public class OrderServiceImpl implements OrderService {
         return orderMapper.mapToOrderDetailsResponse(acceptedOrder);
     }
 
+    /**
+     * Reject an order. Only orders that are in CREATED status can be rejected. Throws exception if order not found or if the order cannot be rejected due to its current status.
+     * @param orderId
+     * @return
+     */
     @Override
     public OrderDetailsResponse rejectOrder(Long orderId) {
         Order order = orderRepository.findById(orderId)
