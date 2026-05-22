@@ -1,6 +1,7 @@
-package com.ordertracking.payment.config;
+package com.ordertracking.payment.kafka;
 
 import com.ordertracking.payment.dto.OrderCreatedEvent;
+import com.ordertracking.payment.dto.PaymentSuccessEvent;
 import com.ordertracking.payment.entity.Payment;
 import com.ordertracking.payment.entity.PaymentStatus;
 import com.ordertracking.payment.repository.PaymentRepository;
@@ -17,7 +18,10 @@ import java.util.UUID;
 public class PaymentEventConsumer {
 
     private final ObjectMapper objectMapper;
+
     private final PaymentRepository paymentRepository;
+
+    private final PaymentEventProducer paymentEventProducer;
 
     @KafkaListener(topics = "order-created", groupId = "payment-group")
     public void consume(String message) {
@@ -31,7 +35,15 @@ public class PaymentEventConsumer {
             payment.setStatus(PaymentStatus.SUCCESS);
             payment.setTransactionId(UUID.randomUUID().toString());
             payment.setCreatedAt(LocalDateTime.now());
-            paymentRepository.save(payment);
+            Payment savedPayment = paymentRepository.save(payment);
+
+            PaymentSuccessEvent successEvent = new PaymentSuccessEvent(
+                    savedPayment.getOrderId(),
+                    savedPayment.getPaymentId(),
+                    savedPayment.getTransactionId(),
+                    savedPayment.getStatus().name()
+            );
+            paymentEventProducer.sendPaymentSuccessEvent(successEvent);
 
             System.out.println("Processed payment for order ID: " + event.getOrderId());
         } catch (Exception e) {

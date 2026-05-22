@@ -84,7 +84,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = new Order();
         order.setCustomerId(request.getCustomerId());
         order.setRestaurantId(request.getRestaurantId());
-        order.setStatus(OrderStatus.CREATED);
+        order.setStatus(OrderStatus.PENDING_PAYMENT);
         order.setCreatedAt(LocalDateTime.now());
 
         // Map AddressRequest to Address entity
