@@ -17,7 +17,7 @@ public class Payment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String  paymentId;
+    private Long paymentId;
     private Long orderId;
     private String customerId;
     private BigDecimal amount;
