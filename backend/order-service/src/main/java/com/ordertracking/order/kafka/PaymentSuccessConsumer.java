@@ -1,5 +1,6 @@
 package com.ordertracking.order.kafka;
 
+import com.ordertracking.order.dto.OrderConfirmedEvent;
 import com.ordertracking.order.dto.PaymentSuccessEvent;
 import com.ordertracking.order.entity.Order;
 import com.ordertracking.order.entity.OrderStatus;
@@ -18,6 +19,8 @@ public class PaymentSuccessConsumer {
 
     private final OrderRepository orderRepository;
 
+    private final OrderConfirmedEventProducer orderConfirmedEventProducer;
+
     @KafkaListener(topics = "payment-success", groupId = "order-group")
     public void consume(String message) {
         try {
@@ -25,7 +28,14 @@ public class PaymentSuccessConsumer {
             Order order = orderRepository.findById(event.getOrderId()).orElseThrow(()-> new OrderNotFoundException("Order not found with ID: " + event.getOrderId()));
 
             order.setStatus(OrderStatus.CONFIRMED);
-            orderRepository.save(order);
+            Order savedOrder = orderRepository.save(order);
+            OrderConfirmedEvent confirmedEvent = new OrderConfirmedEvent(
+                    savedOrder.getOrderId(),
+                    savedOrder.getRestaurantId(),
+                    savedOrder.getCustomerId(),
+                    savedOrder.getStatus().name()
+            );
+            orderConfirmedEventProducer.sendOrderConfirmedEvent(confirmedEvent);
             System.out.println("Order confirmed for Order ID " + event.getOrderId());
 
         } catch (Exception e) {

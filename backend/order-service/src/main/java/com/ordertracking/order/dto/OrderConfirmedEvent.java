@@ -1,4 +1,4 @@
-package com.ordertracking.payment.dto;
+package com.ordertracking.order.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,9 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PaymentSuccessEvent {
+public class OrderConfirmedEvent {
     private Long orderId;
-    private String paymentId;
-    private String transactionId;
+    private Long restaurantId;
+    private String customerId;
     private String status;
 }
