@@ -5,6 +5,7 @@ import com.ordertracking.order.dto.OrderResponse;
 import com.ordertracking.order.dto.OrderSummaryResponse;
 import com.ordertracking.order.dto.PlaceOrderRequest;
 import com.ordertracking.order.entity.Order;
+import org.apache.kafka.common.protocol.types.Field;
 
 import java.util.List;
 
@@ -17,4 +18,6 @@ public interface OrderService {
     List<OrderSummaryResponse> getOrdersByRestaurantId(Long restaurantId);
     OrderDetailsResponse acceptOrder(Long orderId);
     OrderDetailsResponse rejectOrder(Long orderId);
+    String markOrderPreparing(Long orderId);
+    String markOrderReadyForPickup(Long orderId);
 }
