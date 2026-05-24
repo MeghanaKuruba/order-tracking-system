@@ -10,9 +10,11 @@ import com.ordertracking.order.exception.InvalidOrderException;
 import com.ordertracking.order.exception.OrderCancellationNotAllowedException;
 import com.ordertracking.order.exception.OrderNotFoundException;
 import com.ordertracking.order.kafka.OrderEventProducer;
+import com.ordertracking.order.kafka.OrderReadyForPickupEventProducer;
 import com.ordertracking.order.mapper.OrderMapper;
 import com.ordertracking.order.repository.OrderRepository;
 import com.ordertracking.order.service.OrderService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -35,6 +37,8 @@ public class OrderServiceImpl implements OrderService {
     private final String restaurantServiceUrl = "http://localhost:8080/menuItems/";
 
     private final OrderEventProducer orderEventProducer;
+
+    private final OrderReadyForPickupEventProducer orderReadyForPickupEventProducer;
 
     /**
      * Place a new order. Validates the order request, calculates total amount, and saves the order to the database. Throws exception if the order request is invalid.
@@ -250,8 +254,8 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
 
-        if (order.getStatus() != OrderStatus.CREATED) {
-            throw new InvalidOrderException("Only orders in CREATED status can be accepted. Current status: " + order.getStatus());
+        if (order.getStatus() != OrderStatus.CONFIRMED) {
+            throw new InvalidOrderException("Only orders in CONFIRMED status can be accepted. Current status: " + order.getStatus());
         }
 
         order.setStatus(OrderStatus.ACCEPTED);
@@ -269,12 +273,55 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
 
-        if (order.getStatus() != OrderStatus.CREATED) {
-            throw new InvalidOrderException("Only orders in CREATED status can be rejected. Current status: " + order.getStatus());
+        if (order.getStatus() != OrderStatus.CONFIRMED) {
+            throw new InvalidOrderException("Only orders in CONFIRMED status can be rejected. Current status: " + order.getStatus());
         }
 
         order.setStatus(OrderStatus.REJECTED);
         Order rejectedOrder = orderRepository.save(order);
         return orderMapper.mapToOrderDetailsResponse(rejectedOrder);
     }
+
+    /**
+     * Mark an order as preparing. Only orders that are in ACCEPTED status can be marked as preparing. Throws exception if order not found or if the order cannot be marked as preparing due to its current status.
+     * @param orderId
+     * @return
+     */
+    @Transactional
+    @Override
+    public String markOrderPreparing(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
+
+        if (order.getStatus() != OrderStatus.ACCEPTED) {
+            throw new InvalidOrderException("Only orders in ACCEPTED status can be marked as preparing. Current status: " + order.getStatus());
+        }
+
+        order.setStatus(OrderStatus.PREPARING);
+        orderRepository.save(order);
+        return "Order with ID " + orderId + " is now being prepared.";
+    }
+
+    /**
+     * Mark an order as ready for pickup. Only orders that are in PREPARING status can be marked as ready for pickup. Throws exception if order not found or if the order cannot be marked as ready for pickup due to its current status.
+     * @param orderId
+     * @return
+     */
+    @Transactional
+    @Override
+    public String markOrderReadyForPickup(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
+
+        if (order.getStatus() != OrderStatus.PREPARING) {
+            throw new InvalidOrderException("Only orders in PREPARING status can be marked as ready for pickup. Current status: " + order.getStatus());
+        }
+
+        order.setStatus(OrderStatus.READY_FOR_PICKUP);
+        orderRepository.save(order);
+        OrderReadyForPickupEvent event = orderMapper.mapToOrderReadyForPickupEvent(order);
+        return "Order with ID " + orderId + " is now ready for pickup.";
+    }
+
+
 }
