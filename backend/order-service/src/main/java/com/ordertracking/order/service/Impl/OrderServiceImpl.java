@@ -319,7 +319,13 @@ public class OrderServiceImpl implements OrderService {
 
         order.setStatus(OrderStatus.READY_FOR_PICKUP);
         orderRepository.save(order);
-        OrderReadyForPickupEvent event = orderMapper.mapToOrderReadyForPickupEvent(order);
+        OrderReadyForPickupEvent event = new OrderReadyForPickupEvent(
+                order.getOrderId(),
+                order.getRestaurantId(),
+                order.getCustomerId(),
+                order.getStatus().name()
+        );
+        orderReadyForPickupEventProducer.sendOrderReadyForPickupEvent(event);
         return "Order with ID " + orderId + " is now ready for pickup.";
     }
 

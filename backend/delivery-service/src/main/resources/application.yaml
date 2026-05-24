@@ -1,15 +1,12 @@
 server:
-  port: 8082
+  port: 8084
 
 spring:
   application:
-    name: order-service
+    name: delivery-service
 
   kafka:
     bootstrap-servers: localhost:9092
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
   datasource:
     url: jdbc:h2:mem:authdb
