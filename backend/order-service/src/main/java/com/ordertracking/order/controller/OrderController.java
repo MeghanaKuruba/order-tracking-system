@@ -60,4 +60,14 @@ public class OrderController {
     public ResponseEntity<OrderDetailsResponse> rejectOrder(@PathVariable Long orderId) {
         return ResponseEntity.ok(orderService.rejectOrder(orderId));
     }
+
+    @PatchMapping("/preparing/{orderId}")
+    public ResponseEntity<String> markOrderPreparing(@PathVariable Long orderId) {
+        return ResponseEntity.ok(orderService.markOrderPreparing(orderId));
+    }
+
+    @PatchMapping("/ready/{orderId}")
+    public ResponseEntity<String> markOrderReadyForPickup(@PathVariable Long orderId) {
+        return ResponseEntity.ok(orderService.markOrderReadyForPickup(orderId));
+    }
 }
