@@ -14,5 +14,6 @@ public class DeliveryPartnerResponse {
     private String phoneNumber;
     private String vehicleNumber;
     private VehicleType vehicleType;
+    private Boolean active;
     private Boolean available;
 }

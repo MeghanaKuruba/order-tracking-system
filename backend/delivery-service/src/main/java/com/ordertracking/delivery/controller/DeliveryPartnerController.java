@@ -4,11 +4,9 @@ import com.ordertracking.delivery.dto.DeliveryPartnerRequest;
 import com.ordertracking.delivery.dto.DeliveryPartnerResponse;
 import com.ordertracking.delivery.service.DeliveryPartnerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,6 +18,18 @@ public class DeliveryPartnerController {
     @PostMapping
     public ResponseEntity<DeliveryPartnerResponse> addDeliveryPartner(@RequestBody DeliveryPartnerRequest request) {
         DeliveryPartnerResponse response = deliveryPartnerService.addDeliveryPartner(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PutMapping("/activate/{partnerId}")
+    public ResponseEntity<String> activateDeliveryPartner(@PathVariable Long partnerId) {
+        String response = deliveryPartnerService.activateDeliveryPartner(partnerId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/deactivate/{partnerId}")
+    public ResponseEntity<String> deactivateDeliveryPartner(@PathVariable Long partnerId) {
+        String response = deliveryPartnerService.deactivateDeliveryPartner(partnerId);
         return ResponseEntity.ok(response);
     }
 }
