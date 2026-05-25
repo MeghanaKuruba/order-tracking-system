@@ -13,7 +13,8 @@ public class DeliveryPartnerMapper {
         deliveryPartner.setPhoneNumber(request.getPhoneNumber());
         deliveryPartner.setVehicleNumber(request.getVehicleNumber());
         deliveryPartner.setVehicleType(request.getVehicleType());
-        deliveryPartner.setAvailable(true);
+        deliveryPartner.setActive(false); // New partners are inactive by default
+        deliveryPartner.setAvailable(false); // New partners are not available until they activate their account
         return deliveryPartner;
     }
 
@@ -24,6 +25,7 @@ public class DeliveryPartnerMapper {
         response.setPhoneNumber(deliveryPartner.getPhoneNumber());
         response.setVehicleNumber(deliveryPartner.getVehicleNumber());
         response.setVehicleType(deliveryPartner.getVehicleType());
+        response.setActive(deliveryPartner.getActive());
         response.setAvailable(deliveryPartner.getAvailable());
         return response;
     }

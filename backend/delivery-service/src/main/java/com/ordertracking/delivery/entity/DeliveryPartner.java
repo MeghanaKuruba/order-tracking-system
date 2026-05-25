@@ -21,5 +21,6 @@ public class DeliveryPartner {
 
     @Enumerated(EnumType.STRING)
     private VehicleType vehicleType;
+    private Boolean active;
     private Boolean available;
 }

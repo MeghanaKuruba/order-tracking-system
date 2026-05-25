@@ -30,9 +30,11 @@ public class DeliveryEventConsumer {
             OrderReadyForPickupEvent event = objectMapper.readValue(message, OrderReadyForPickupEvent.class);
             DeliveryPartner partner = deliveryPartnerRepository.findAll()
                     .stream()
+                    .filter(p -> p.getActive() && p.getAvailable())
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("No delivery partner available"));
             partner.setAvailable(false);
+            deliveryPartnerRepository.save(partner);
 
             Delivery delivery = Delivery.builder()
                     .orderId(event.getOrderId())
