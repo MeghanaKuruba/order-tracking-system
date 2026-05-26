@@ -1,10 +1,12 @@
 package com.ordertracking.delivery.service.impl;
 
+import com.ordertracking.delivery.dto.DeliveryStatusUpdatedEvent;
 import com.ordertracking.delivery.entity.Delivery;
 import com.ordertracking.delivery.entity.DeliveryPartner;
 import com.ordertracking.delivery.entity.DeliveryStatus;
 import com.ordertracking.delivery.exception.DeliveryNotFoundException;
 import com.ordertracking.delivery.exception.InvalidDeliveryStateException;
+import com.ordertracking.delivery.kafka.DeliveryStatusProducer;
 import com.ordertracking.delivery.repository.DeliveryRepository;
 import com.ordertracking.delivery.service.DeliveryService;
 import jakarta.transaction.Transactional;
@@ -17,6 +19,7 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     private final DeliveryRepository deliveryRepository;
 
+    private final DeliveryStatusProducer deliveryStatusProducer;
     @Override
     @Transactional
     public String markPickedUp(Long deliveryId) {
@@ -26,6 +29,11 @@ public class DeliveryServiceImpl implements DeliveryService {
             throw new InvalidDeliveryStateException("Delivery is not in ASSIGNED status, cannot mark as picked up");
         }
         delivery.setStatus(DeliveryStatus.PICKED_UP);
+        DeliveryStatusUpdatedEvent event = DeliveryStatusUpdatedEvent.builder()
+                .orderId(delivery.getOrderId())
+                .deliveryStatus(DeliveryStatus.PICKED_UP.name())
+                .build();
+        deliveryStatusProducer.sendDeliveryStatusUpdatedEvent(event);
         deliveryRepository.save(delivery);
         return "Order picked up successfully";
     }
@@ -39,6 +47,11 @@ public class DeliveryServiceImpl implements DeliveryService {
             throw new InvalidDeliveryStateException("Delivery is not in PICKED_UP status, cannot mark as out for delivery");
         }
         delivery.setStatus(DeliveryStatus.OUT_FOR_DELIVERY);
+        DeliveryStatusUpdatedEvent event = DeliveryStatusUpdatedEvent.builder()
+                .orderId(delivery.getOrderId())
+                .deliveryStatus(DeliveryStatus.OUT_FOR_DELIVERY.name())
+                .build();
+        deliveryStatusProducer.sendDeliveryStatusUpdatedEvent(event);
         deliveryRepository.save(delivery);
         return "Order is out for delivery";
     }
@@ -54,6 +67,11 @@ public class DeliveryServiceImpl implements DeliveryService {
         delivery.setStatus(DeliveryStatus.DELIVERED);
         DeliveryPartner partner = delivery.getDeliveryPartner();
         partner.setAvailable(true);
+        DeliveryStatusUpdatedEvent event = DeliveryStatusUpdatedEvent.builder()
+                .orderId(delivery.getOrderId())
+                .deliveryStatus(DeliveryStatus.DELIVERED.name())
+                .build();
+        deliveryStatusProducer.sendDeliveryStatusUpdatedEvent(event);
         deliveryRepository.save(delivery);
         return "Order delivered successfully";
     }

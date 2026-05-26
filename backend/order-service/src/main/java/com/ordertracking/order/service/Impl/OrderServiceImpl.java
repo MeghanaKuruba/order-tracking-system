@@ -218,6 +218,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
 
         if (order.getStatus() == OrderStatus.PREPARING ||
+                order.getStatus() == OrderStatus.PICKED_UP ||
                 order.getStatus() == OrderStatus.READY_FOR_PICKUP ||
                 order.getStatus() == OrderStatus.OUT_FOR_DELIVERY ||
                 order.getStatus() == OrderStatus.DELIVERED) {
