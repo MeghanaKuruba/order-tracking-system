@@ -5,10 +5,7 @@ import com.ordertracking.order.entity.Address;
 import com.ordertracking.order.entity.Order;
 import com.ordertracking.order.entity.OrderItem;
 import com.ordertracking.order.entity.OrderStatus;
-import com.ordertracking.order.exception.EnumError;
-import com.ordertracking.order.exception.InvalidOrderException;
-import com.ordertracking.order.exception.OrderCancellationNotAllowedException;
-import com.ordertracking.order.exception.OrderNotFoundException;
+import com.ordertracking.order.exception.*;
 import com.ordertracking.order.kafka.OrderEventProducer;
 import com.ordertracking.order.kafka.OrderReadyForPickupEventProducer;
 import com.ordertracking.order.mapper.OrderMapper;
@@ -34,7 +31,8 @@ public class OrderServiceImpl implements OrderService {
     private final RestTemplate restTemplate;
 
     private final OrderMapper orderMapper;
-    private final String restaurantServiceUrl = "http://localhost:8080/menuItems/";
+    private final String MenuItemServiceUrl = "http://localhost:8080/menuItems/";
+    private final String RestaurantServiceUrl = "http://localhost:8080/restaurants/";
 
     private final OrderEventProducer orderEventProducer;
 
@@ -54,6 +52,20 @@ public class OrderServiceImpl implements OrderService {
 
         if(request.getDeliveryAddress() == null) {
             throw new InvalidOrderException("Delivery address is required");
+        }
+
+        RestaurantAvailabilityResponse response = restTemplate.getForObject(
+                RestaurantServiceUrl
+                        + "available/"
+                        + request.getRestaurantId(),
+                RestaurantAvailabilityResponse.class);
+
+        if(!response.getOpen()) {
+            throw new RestaurantClosedException("Restaurant is currently unavailable");
+        }
+
+        if (!response.getAcceptingOrders()) {
+            throw new RestaurantNotAcceptingOrdersException("Restaurant is temporarily not accepting orders");
         }
 
         //Merge duplicate items in the order request
@@ -105,7 +117,7 @@ public class OrderServiceImpl implements OrderService {
                 throw new InvalidOrderException("Item quantity must be greater than zero");
             }
 
-            String url = restaurantServiceUrl + itemReq.getMenuItemId();
+            String url = MenuItemServiceUrl + itemReq.getMenuItemId();
 
             System.out.println("Calling restaurant service url: " + url);
 

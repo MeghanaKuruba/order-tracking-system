@@ -1,8 +1,11 @@
 package com.ordertracking.restaurant.controller;
 
+import com.ordertracking.restaurant.Exception.RestaurantNotFoundException;
+import com.ordertracking.restaurant.dto.RestaurantAvailabilityResponse;
 import com.ordertracking.restaurant.dto.RestaurantRequest;
 import com.ordertracking.restaurant.dto.RestaurantResponse;
 import com.ordertracking.restaurant.entity.Restaurant;
+import com.ordertracking.restaurant.repository.RestaurantRepository;
 import com.ordertracking.restaurant.service.RestaurantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +19,8 @@ import java.util.List;
 public class RestaurantController {
 
     private final RestaurantService restaurantService;
+
+    private final RestaurantRepository restaurantRepository;
 
     @PostMapping("/create")
     public ResponseEntity<String> createRestaurant(@RequestBody RestaurantRequest request) {
@@ -54,5 +59,31 @@ public class RestaurantController {
     @PatchMapping("/updateStatus/{id}")
     public ResponseEntity<RestaurantResponse> updateRestaurantStatus(@PathVariable long id, @RequestParam boolean active) {
         return ResponseEntity.ok(restaurantService.updateRestaurantStatus(id, active));
+    }
+
+    @PatchMapping("/open/{id}")
+    public ResponseEntity<Boolean> isRestaurantOpen(@PathVariable long id) {
+        return ResponseEntity.ok(restaurantService.isRestaurantOpen(id));
+    }
+
+    @PatchMapping("/close/{id}")
+    public ResponseEntity<Boolean> isRestaurantClose(@PathVariable long id) {
+        return ResponseEntity.ok(restaurantService.isRestaurantClose(id));
+    }
+
+    @PatchMapping("/pauseOrders/{id}")
+    public ResponseEntity<Boolean> pauseOrders(@PathVariable long id) {
+        return ResponseEntity.ok(restaurantService.pauseOrders(id));
+    }
+
+    @PatchMapping("/resumeOrders/{id}")
+    public ResponseEntity<Boolean> resumeOrders(@PathVariable long id) {
+        return ResponseEntity.ok(restaurantService.resumeOrders(id));
+    }
+
+    @GetMapping("/available/{id}")
+    public ResponseEntity<RestaurantAvailabilityResponse> getAvailability(@PathVariable long id) {
+        RestaurantAvailabilityResponse response = restaurantService.getRestaurantAvailability(id);
+        return ResponseEntity.ok(response);
     }
 }
