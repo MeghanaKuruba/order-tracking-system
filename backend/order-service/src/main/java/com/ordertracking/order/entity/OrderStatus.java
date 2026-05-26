@@ -8,6 +8,7 @@ public enum OrderStatus {
     REJECTED,
     PREPARING,
     READY_FOR_PICKUP,
+    PICKED_UP,
     OUT_FOR_DELIVERY,
     DELIVERED,
     REFUND_INITIATED,
