@@ -18,13 +18,14 @@ public class Restaurant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @NotNull
     private String name;
     @NotNull
     private String address;
     private String cuisineType;
     private boolean active;
+    private boolean open;
+    private Boolean acceptingOrders;
 
     @JsonIgnore
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)

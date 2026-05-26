@@ -38,6 +38,18 @@ public class GlobalExceptionHandler {
              OrderCancellationNotAllowedException ex, HttpServletRequest request) {
          return buildErrorResponse(HttpStatus.BAD_REQUEST, "Order Cancellation Not Allowed", ex.getMessage(), request);
      }
+
+     @ExceptionHandler(RestaurantClosedException.class)
+     public ResponseEntity<ErrorResponse> handleRestaurantClosedException(
+             RestaurantClosedException ex, HttpServletRequest request) {
+         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Restaurant Closed", ex.getMessage(), request);
+     }
+
+     @ExceptionHandler(RestaurantNotAcceptingOrdersException.class)
+     public ResponseEntity<ErrorResponse> handleRestaurantNotAcceptingOrdersException(
+             RestaurantNotAcceptingOrdersException ex, HttpServletRequest request) {
+         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Restaurant Not Accepting Orders", ex.getMessage(), request);
+     }
     private ResponseEntity<ErrorResponse> buildErrorResponse(
             HttpStatus status, String error, String message, HttpServletRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(

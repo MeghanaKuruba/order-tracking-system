@@ -2,7 +2,9 @@ package com.ordertracking.restaurant.service.impl;
 
 import com.ordertracking.restaurant.Exception.NoChangesFoundException;
 import com.ordertracking.restaurant.Exception.RestaurantAlreadyExistsException;
+import com.ordertracking.restaurant.Exception.RestaurantClosedException;
 import com.ordertracking.restaurant.Exception.RestaurantNotFoundException;
+import com.ordertracking.restaurant.dto.RestaurantAvailabilityResponse;
 import com.ordertracking.restaurant.dto.RestaurantRequest;
 import com.ordertracking.restaurant.dto.RestaurantResponse;
 import com.ordertracking.restaurant.entity.Restaurant;
@@ -34,6 +36,8 @@ public class RestaurantServiceImpl implements RestaurantService {
         restaurant.setAddress(request.getAddress());
         restaurant.setCuisineType(request.getCuisineType());
         restaurant.setActive(true);
+        restaurant.setAcceptingOrders(false);
+        restaurant.setOpen(false);
         return restaurantRepository.save(restaurant);
     }
 
@@ -151,6 +155,89 @@ public class RestaurantServiceImpl implements RestaurantService {
         Restaurant updatedRestaurant = restaurantRepository.save(existingRestaurant);
         return mapToResponse(updatedRestaurant);
     }
+
+    /**
+     * Mark a restaurant as open. Throws exception if restaurant not found.
+     * @param id
+     * @return
+     */
+    @Override
+    public Boolean isRestaurantOpen(long id) {
+        Restaurant existingRestaurant = restaurantRepository.findById(id)
+                .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with id: " + id));
+
+        existingRestaurant.setOpen(true);
+        existingRestaurant.setAcceptingOrders(true);
+        restaurantRepository.save(existingRestaurant);
+        return true;
+    }
+
+    /**
+     * Mark a restaurant as closed. Throws exception if restaurant not found.
+     * @param id
+     * @return
+     */
+    @Override
+    public Boolean isRestaurantClose(long id) {
+        Restaurant existingRestaurant = restaurantRepository.findById(id)
+                .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with id: " + id));
+
+        existingRestaurant.setOpen(false);
+        existingRestaurant.setAcceptingOrders(false);
+        restaurantRepository.save(existingRestaurant);
+        return true;
+    }
+
+    /**
+     * Pause accepting orders for a restaurant. Throws exception if restaurant not found.
+     * @param id
+     * @return
+     */
+    @Override
+    public Boolean pauseOrders(long id) {
+        Restaurant existingRestaurant = restaurantRepository.findById(id)
+                .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with id: " + id));
+
+        existingRestaurant.setAcceptingOrders(false);
+        restaurantRepository.save(existingRestaurant);
+        return true;
+    }
+
+    /**
+     * Resume accepting orders for a restaurant. Throws exception if restaurant not found.
+     * @param id
+     * @return
+     */
+    @Override
+    public Boolean resumeOrders(long id) {
+        Restaurant existingRestaurant = restaurantRepository.findById(id)
+                .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with id: " + id));
+
+        if (!existingRestaurant.isOpen()) {
+            throw new RestaurantClosedException("Cannot resume orders for a closed restaurant. Please open the restaurant first.");
+        }
+        existingRestaurant.setAcceptingOrders(true);
+        restaurantRepository.save(existingRestaurant);
+        return true;
+    }
+
+    /**
+     * Get restaurant availability status (open/closed and accepting orders). Throws exception if restaurant not found.
+     * @param id
+     * @return
+     */
+    @Override
+    public RestaurantAvailabilityResponse getRestaurantAvailability(long id) {
+        Restaurant restaurant = restaurantRepository.findById(id)
+                .orElseThrow(() -> new RestaurantNotFoundException(
+                        "Restaurant not found with id: " + id));
+
+        return new RestaurantAvailabilityResponse(
+                restaurant.isOpen(),
+                restaurant.getAcceptingOrders()
+        );
+    }
+
 
     /**
      * Map Restaurant entity to RestaurantResponse DTO.

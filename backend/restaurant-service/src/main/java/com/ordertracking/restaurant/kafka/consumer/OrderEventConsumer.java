@@ -1,4 +1,4 @@
-package com.ordertracking.restaurant.kafka;
+package com.ordertracking.restaurant.kafka.consumer;
 
 import com.ordertracking.restaurant.dto.OrderConfirmedEvent;
 import lombok.RequiredArgsConstructor;
