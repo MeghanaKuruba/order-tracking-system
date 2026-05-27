@@ -62,13 +62,13 @@ public class RestaurantController {
     }
 
     @PatchMapping("/open/{id}")
-    public ResponseEntity<Boolean> isRestaurantOpen(@PathVariable long id) {
-        return ResponseEntity.ok(restaurantService.isRestaurantOpen(id));
+    public ResponseEntity<Boolean> openRestaurant(@PathVariable long id) {
+        return ResponseEntity.ok(restaurantService.openRestaurant(id));
     }
 
     @PatchMapping("/close/{id}")
-    public ResponseEntity<Boolean> isRestaurantClose(@PathVariable long id) {
-        return ResponseEntity.ok(restaurantService.isRestaurantClose(id));
+    public ResponseEntity<Boolean> closeRestaurant(@PathVariable long id) {
+        return ResponseEntity.ok(restaurantService.closeRestaurant(id));
     }
 
     @PatchMapping("/pauseOrders/{id}")
@@ -79,6 +79,21 @@ public class RestaurantController {
     @PatchMapping("/resumeOrders/{id}")
     public ResponseEntity<Boolean> resumeOrders(@PathVariable long id) {
         return ResponseEntity.ok(restaurantService.resumeOrders(id));
+    }
+
+    @PutMapping("/markPreparing/{orderId}")
+    public ResponseEntity<String> markPreparing(@PathVariable Long orderId) {
+        return ResponseEntity.ok(restaurantService.markPerparing(orderId));
+    }
+
+    @PutMapping("/markReadyForPickup/{orderId}")
+    public ResponseEntity<String> markReadyForPickup(@PathVariable Long orderId) {
+        return ResponseEntity.ok(restaurantService.markReadyForPickup(orderId));
+    }
+
+    @PutMapping("/rejectOrder/{orderId}")
+    public ResponseEntity<String> rejectOrder(@PathVariable Long orderId) {
+        return ResponseEntity.ok(restaurantService.rejectOrder(orderId));
     }
 
     @GetMapping("/available/{id}")
