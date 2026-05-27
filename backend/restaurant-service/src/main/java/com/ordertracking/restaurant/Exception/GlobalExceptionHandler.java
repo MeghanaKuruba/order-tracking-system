@@ -28,6 +28,12 @@ public class GlobalExceptionHandler {
          return buildErrorResponse(HttpStatus.BAD_REQUEST, "Restaurant Closed", ex.getMessage(), request);
      }
 
+     @ExceptionHandler(OrderNotFoundException.class)
+     public ResponseEntity<ErrorResponse> handleOrderNotFoundException(
+             OrderNotFoundException ex, HttpServletRequest request) {
+         return buildErrorResponse(HttpStatus.NOT_FOUND, "Order Not Found", ex.getMessage(), request);
+     }
+
      @ExceptionHandler(RestaurantAlreadyExistsException.class)
      public ResponseEntity<ErrorResponse> handleRestaurantAlreadyExistsException(
              RestaurantAlreadyExistsException ex, HttpServletRequest request) {

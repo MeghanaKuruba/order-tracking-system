@@ -4,9 +4,10 @@ import com.ordertracking.restaurant.dto.RestaurantOrderStatusEvent;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
-@Data
+@Service
 @RequiredArgsConstructor
 public class RestaurantOrderStatusProducer {
 

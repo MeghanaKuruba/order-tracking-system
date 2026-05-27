@@ -1,15 +1,18 @@
 package com.ordertracking.restaurant.service.impl;
 
-import com.ordertracking.restaurant.Exception.NoChangesFoundException;
-import com.ordertracking.restaurant.Exception.RestaurantAlreadyExistsException;
-import com.ordertracking.restaurant.Exception.RestaurantClosedException;
-import com.ordertracking.restaurant.Exception.RestaurantNotFoundException;
+import com.ordertracking.restaurant.Exception.*;
 import com.ordertracking.restaurant.dto.RestaurantAvailabilityResponse;
+import com.ordertracking.restaurant.dto.RestaurantOrderStatusEvent;
 import com.ordertracking.restaurant.dto.RestaurantRequest;
 import com.ordertracking.restaurant.dto.RestaurantResponse;
+import com.ordertracking.restaurant.entity.OrderStatus;
 import com.ordertracking.restaurant.entity.Restaurant;
+import com.ordertracking.restaurant.entity.RestaurantOrder;
+import com.ordertracking.restaurant.kafka.producer.RestaurantOrderStatusProducer;
+import com.ordertracking.restaurant.repository.RestaurantOrderRepository;
 import com.ordertracking.restaurant.repository.RestaurantRepository;
 import com.ordertracking.restaurant.service.RestaurantService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +23,10 @@ import java.util.List;
 public class RestaurantServiceImpl implements RestaurantService {
 
     private final RestaurantRepository restaurantRepository;
+
+    private final RestaurantOrderRepository restaurantOrderRepository;
+
+    private final RestaurantOrderStatusProducer producer;
 
     /**
      * Create a new restaurant. Throws exception if a restaurant with the same name already exists.
@@ -162,7 +169,7 @@ public class RestaurantServiceImpl implements RestaurantService {
      * @return
      */
     @Override
-    public Boolean isRestaurantOpen(long id) {
+    public Boolean openRestaurant(long id) {
         Restaurant existingRestaurant = restaurantRepository.findById(id)
                 .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with id: " + id));
 
@@ -178,7 +185,7 @@ public class RestaurantServiceImpl implements RestaurantService {
      * @return
      */
     @Override
-    public Boolean isRestaurantClose(long id) {
+    public Boolean closeRestaurant(long id) {
         Restaurant existingRestaurant = restaurantRepository.findById(id)
                 .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with id: " + id));
 
@@ -219,6 +226,77 @@ public class RestaurantServiceImpl implements RestaurantService {
         existingRestaurant.setAcceptingOrders(true);
         restaurantRepository.save(existingRestaurant);
         return true;
+    }
+
+    /**
+     * Mark an order as preparing. Throws exception if restaurant or order not found.
+     * @param orderId
+     * @return
+     */
+    @Transactional
+    @Override
+    public String markPerparing(Long orderId) {
+        RestaurantOrder order = restaurantOrderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
+        order.setStatus(OrderStatus.PREPARING);
+
+        restaurantOrderRepository.save(order);
+
+        RestaurantOrderStatusEvent event =
+                RestaurantOrderStatusEvent.builder()
+                .orderId(order.getOrderId())
+                        .orderStatus("PREPARING")
+                        .build();
+        producer.sendRestaurantOrderStatusEvent(event);
+        return "Order marked as preparing";
+    }
+
+    /**
+     * Mark an order as ready for pickup. Throws exception if restaurant or order not found.
+     * @param orderId
+     * @return
+     */
+    @Transactional
+    @Override
+    public String markReadyForPickup(Long orderId) {
+        RestaurantOrder order = restaurantOrderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
+
+        order.setStatus(OrderStatus.READY_FOR_PICKUP);
+
+        restaurantOrderRepository.save(order);
+
+        RestaurantOrderStatusEvent event =
+                RestaurantOrderStatusEvent.builder()
+                        .orderId(order.getOrderId())
+                        .orderStatus("READY_FOR_PICKUP")
+                        .build();
+        producer.sendRestaurantOrderStatusEvent(event);
+        return "Order marked as ready for pickup";
+    }
+
+    /**
+     * Reject an order. Throws exception if restaurant or order not found.
+     * @param orderId
+     * @return
+     */
+    @Transactional
+    @Override
+    public String rejectOrder(Long orderId) {
+        RestaurantOrder order = restaurantOrderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
+
+        order.setStatus(OrderStatus.REJECTED);
+
+        restaurantOrderRepository.save(order);
+
+        RestaurantOrderStatusEvent event =
+                RestaurantOrderStatusEvent.builder()
+                        .orderId(order.getOrderId())
+                        .orderStatus("REJECTED")
+                        .build();
+        producer.sendRestaurantOrderStatusEvent(event);
+        return "Order rejected";
     }
 
     /**

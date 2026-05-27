@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @Builder
 public class RestaurantOrderStatusEvent {
     private Long orderId;
-    private String OrderStatus;
+    private String orderStatus;
 }
