@@ -21,7 +21,6 @@ public interface RestaurantService {
     Boolean closeRestaurant(long id);
     Boolean pauseOrders(long id);
     Boolean resumeOrders(long id);
-    String markPerparing(Long orderId);
     String markReadyForPickup(Long orderId);
     String rejectOrder(Long orderId);
     RestaurantAvailabilityResponse getRestaurantAvailability(long id);

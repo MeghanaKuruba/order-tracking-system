@@ -1,11 +1,14 @@
 package com.ordertracking.delivery.kafka;
 
 import com.ordertracking.delivery.dto.OrderReadyForPickupEvent;
+import com.ordertracking.delivery.dto.RestaurantOrderStatusEvent;
 import com.ordertracking.delivery.entity.Delivery;
 import com.ordertracking.delivery.entity.DeliveryPartner;
 import com.ordertracking.delivery.entity.DeliveryStatus;
+import com.ordertracking.delivery.exception.DeliveryPartnerNotAvailableException;
 import com.ordertracking.delivery.repository.DeliveryPartnerRepository;
 import com.ordertracking.delivery.repository.DeliveryRepository;
+import com.ordertracking.delivery.service.DeliveryPartnerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -19,34 +22,20 @@ public class DeliveryEventConsumer {
 
     private final ObjectMapper objectMapper;
 
-    private final DeliveryRepository deliveryRepository;
+    private final DeliveryPartnerService deliveryPartnerService;
 
-    private final DeliveryPartnerRepository deliveryPartnerRepository;
-
-    @KafkaListener(topics = "order-ready-for-pickup", groupId = "delivery-group")
+    @KafkaListener(topics = "restaurant-order-status", groupId = "delivery-group")
     public void consume(String message) {
         System.out.println("Received message: " + message);
         try {
-            OrderReadyForPickupEvent event = objectMapper.readValue(message, OrderReadyForPickupEvent.class);
-            DeliveryPartner partner = deliveryPartnerRepository.findAll()
-                    .stream()
-                    .filter(p -> p.getActive() && p.getAvailable())
-                    .findFirst()
-                    .orElseThrow(() -> new RuntimeException("No delivery partner available"));
-            partner.setAvailable(false);
-            deliveryPartnerRepository.save(partner);
+            System.out.println("Received message: " + message);
 
-            Delivery delivery = Delivery.builder()
-                    .orderId(event.getOrderId())
-                    .restaurantId(event.getRestaurantId())
-                    .customerId(event.getCustomerId())
-                    .status(DeliveryStatus.ASSIGNED)
-                    .deliveryPartner(partner)
-                    .assignedAt(LocalDateTime.now())
-                    .build();
-            deliveryRepository.save(delivery);
+            RestaurantOrderStatusEvent event = objectMapper.readValue(message, RestaurantOrderStatusEvent.class);
 
-            System.out.println("Assigned delivery partner " + partner.getName() + " to order " + event.getOrderId());
+            if(event.getOrderStatus().equals("READY_FOR_PICKUP")){
+                deliveryPartnerService.assignDeliveryPartner(event);
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }

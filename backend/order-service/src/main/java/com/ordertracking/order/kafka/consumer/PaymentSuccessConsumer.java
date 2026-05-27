@@ -1,10 +1,11 @@
-package com.ordertracking.order.kafka;
+package com.ordertracking.order.kafka.consumer;
 
 import com.ordertracking.order.dto.OrderConfirmedEvent;
 import com.ordertracking.order.dto.PaymentSuccessEvent;
 import com.ordertracking.order.entity.Order;
 import com.ordertracking.order.entity.OrderStatus;
 import com.ordertracking.order.exception.OrderNotFoundException;
+import com.ordertracking.order.kafka.producer.OrderConfirmedEventProducer;
 import com.ordertracking.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -33,7 +34,8 @@ public class PaymentSuccessConsumer {
                     savedOrder.getOrderId(),
                     savedOrder.getRestaurantId(),
                     savedOrder.getCustomerId(),
-                    savedOrder.getStatus().name()
+                    savedOrder.getStatus().name(),
+                    savedOrder.getTotalAmount()
             );
             orderConfirmedEventProducer.sendOrderConfirmedEvent(confirmedEvent);
             System.out.println("Order confirmed for Order ID " + event.getOrderId());

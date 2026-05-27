@@ -16,6 +16,12 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", ex.getMessage(), request);
     }
 
+    @ExceptionHandler(DeliveryPartnerNotAvailableException.class)
+    public ResponseEntity<ErrorResponse> handleDeliveryPartnerNotAvailableException(
+            InvalidDeliveryStateException ex, HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "No delivery partner available", ex.getMessage(), request);
+    }
+
     @ExceptionHandler(InvalidDeliveryStateException.class)
     public ResponseEntity<ErrorResponse> handleInvalidDeliveryStateException(
             InvalidDeliveryStateException ex, HttpServletRequest request) {

@@ -1,4 +1,4 @@
-package com.ordertracking.order.kafka;
+package com.ordertracking.order.kafka.consumer;
 
 import com.ordertracking.order.dto.DeliveryStatusUpdatedEvent;
 import com.ordertracking.order.entity.Order;
