@@ -1,4 +1,4 @@
-package com.ordertracking.order.kafka;
+package com.ordertracking.order.kafka.producer;
 
 import com.ordertracking.order.dto.OrderCreatedEvent;
 import lombok.AllArgsConstructor;

@@ -81,11 +81,6 @@ public class RestaurantController {
         return ResponseEntity.ok(restaurantService.resumeOrders(id));
     }
 
-    @PutMapping("/markPreparing/{orderId}")
-    public ResponseEntity<String> markPreparing(@PathVariable Long orderId) {
-        return ResponseEntity.ok(restaurantService.markPerparing(orderId));
-    }
-
     @PutMapping("/markReadyForPickup/{orderId}")
     public ResponseEntity<String> markReadyForPickup(@PathVariable Long orderId) {
         return ResponseEntity.ok(restaurantService.markReadyForPickup(orderId));

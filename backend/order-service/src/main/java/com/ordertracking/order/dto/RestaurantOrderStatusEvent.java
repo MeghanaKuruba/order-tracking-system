@@ -1,18 +1,17 @@
 package com.ordertracking.order.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class OrderConfirmedEvent {
+@Builder
+public class RestaurantOrderStatusEvent {
     private Long orderId;
     private Long restaurantId;
     private String customerId;
-    private String status;
-    private BigDecimal totalAmount;
+    private String orderStatus;
 }

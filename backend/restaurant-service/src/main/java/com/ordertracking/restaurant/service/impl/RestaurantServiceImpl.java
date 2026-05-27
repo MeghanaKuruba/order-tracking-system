@@ -229,29 +229,6 @@ public class RestaurantServiceImpl implements RestaurantService {
     }
 
     /**
-     * Mark an order as preparing. Throws exception if restaurant or order not found.
-     * @param orderId
-     * @return
-     */
-    @Transactional
-    @Override
-    public String markPerparing(Long orderId) {
-        RestaurantOrder order = restaurantOrderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
-        order.setStatus(OrderStatus.PREPARING);
-
-        restaurantOrderRepository.save(order);
-
-        RestaurantOrderStatusEvent event =
-                RestaurantOrderStatusEvent.builder()
-                .orderId(order.getOrderId())
-                        .orderStatus("PREPARING")
-                        .build();
-        producer.sendRestaurantOrderStatusEvent(event);
-        return "Order marked as preparing";
-    }
-
-    /**
      * Mark an order as ready for pickup. Throws exception if restaurant or order not found.
      * @param orderId
      * @return

@@ -1,17 +1,14 @@
 package com.ordertracking.order.service.Impl;
 
 import com.ordertracking.order.dto.*;
-import com.ordertracking.order.entity.Address;
 import com.ordertracking.order.entity.Order;
 import com.ordertracking.order.entity.OrderItem;
 import com.ordertracking.order.entity.OrderStatus;
 import com.ordertracking.order.exception.*;
-import com.ordertracking.order.kafka.OrderEventProducer;
-import com.ordertracking.order.kafka.OrderReadyForPickupEventProducer;
+import com.ordertracking.order.kafka.producer.OrderEventProducer;
 import com.ordertracking.order.mapper.OrderMapper;
 import com.ordertracking.order.repository.OrderRepository;
 import com.ordertracking.order.service.OrderService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -35,8 +32,6 @@ public class OrderServiceImpl implements OrderService {
     private final String RestaurantServiceUrl = "http://localhost:8080/restaurants/";
 
     private final OrderEventProducer orderEventProducer;
-
-    private final OrderReadyForPickupEventProducer orderReadyForPickupEventProducer;
 
     /**
      * Place a new order. Validates the order request, calculates total amount, and saves the order to the database. Throws exception if the order request is invalid.
@@ -256,91 +251,4 @@ public class OrderServiceImpl implements OrderService {
                 .map(orderMapper::mapToOrderSummaryResponse)
                 .toList();
     }
-
-    /**
-     * Accept an order. Only orders that are in CREATED status can be accepted. Throws exception if order not found or if the order cannot be accepted due to its current status.
-     * @param orderId
-     * @return
-     */
-    @Override
-    public OrderDetailsResponse acceptOrder(Long orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
-
-        if (order.getStatus() != OrderStatus.CONFIRMED) {
-            throw new InvalidOrderException("Only orders in CONFIRMED status can be accepted. Current status: " + order.getStatus());
-        }
-
-        order.setStatus(OrderStatus.ACCEPTED);
-        Order acceptedOrder = orderRepository.save(order);
-        return orderMapper.mapToOrderDetailsResponse(acceptedOrder);
-    }
-
-    /**
-     * Reject an order. Only orders that are in CREATED status can be rejected. Throws exception if order not found or if the order cannot be rejected due to its current status.
-     * @param orderId
-     * @return
-     */
-    @Override
-    public OrderDetailsResponse rejectOrder(Long orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
-
-        if (order.getStatus() != OrderStatus.CONFIRMED) {
-            throw new InvalidOrderException("Only orders in CONFIRMED status can be rejected. Current status: " + order.getStatus());
-        }
-
-        order.setStatus(OrderStatus.REJECTED);
-        Order rejectedOrder = orderRepository.save(order);
-        return orderMapper.mapToOrderDetailsResponse(rejectedOrder);
-    }
-
-    /**
-     * Mark an order as preparing. Only orders that are in ACCEPTED status can be marked as preparing. Throws exception if order not found or if the order cannot be marked as preparing due to its current status.
-     * @param orderId
-     * @return
-     */
-    @Transactional
-    @Override
-    public String markOrderPreparing(Long orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
-
-        if (order.getStatus() != OrderStatus.ACCEPTED) {
-            throw new InvalidOrderException("Only orders in ACCEPTED status can be marked as preparing. Current status: " + order.getStatus());
-        }
-
-        order.setStatus(OrderStatus.PREPARING);
-        orderRepository.save(order);
-        return "Order with ID " + orderId + " is now being prepared.";
-    }
-
-    /**
-     * Mark an order as ready for pickup. Only orders that are in PREPARING status can be marked as ready for pickup. Throws exception if order not found or if the order cannot be marked as ready for pickup due to its current status.
-     * @param orderId
-     * @return
-     */
-    @Transactional
-    @Override
-    public String markOrderReadyForPickup(Long orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
-
-        if (order.getStatus() != OrderStatus.PREPARING) {
-            throw new InvalidOrderException("Only orders in PREPARING status can be marked as ready for pickup. Current status: " + order.getStatus());
-        }
-
-        order.setStatus(OrderStatus.READY_FOR_PICKUP);
-        orderRepository.save(order);
-        OrderReadyForPickupEvent event = new OrderReadyForPickupEvent(
-                order.getOrderId(),
-                order.getRestaurantId(),
-                order.getCustomerId(),
-                order.getStatus().name()
-        );
-        orderReadyForPickupEventProducer.sendOrderReadyForPickupEvent(event);
-        return "Order with ID " + orderId + " is now ready for pickup.";
-    }
-
-
 }

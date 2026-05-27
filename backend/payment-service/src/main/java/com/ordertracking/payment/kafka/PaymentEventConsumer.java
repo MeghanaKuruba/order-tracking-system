@@ -41,7 +41,8 @@ public class PaymentEventConsumer {
                     savedPayment.getOrderId(),
                     savedPayment.getPaymentId(),
                     savedPayment.getTransactionId(),
-                    savedPayment.getStatus().name()
+                    savedPayment.getStatus().name(),
+                    savedPayment.getAmount()
             );
             paymentEventProducer.sendPaymentSuccessEvent(successEvent);
 

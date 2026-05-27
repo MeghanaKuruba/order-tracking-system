@@ -50,24 +50,4 @@ public class OrderController {
     public ResponseEntity<List<OrderSummaryResponse>> getOrdersByRestaurantId(@PathVariable Long restaurantId) {
         return ResponseEntity.ok(orderService.getOrdersByRestaurantId(restaurantId));
     }
-
-    @PatchMapping("/accept/{orderId}")
-    public ResponseEntity<OrderDetailsResponse> acceptOrder(@PathVariable Long orderId) {
-        return ResponseEntity.ok(orderService.acceptOrder(orderId));
-    }
-
-    @PatchMapping("/reject/{orderId}")
-    public ResponseEntity<OrderDetailsResponse> rejectOrder(@PathVariable Long orderId) {
-        return ResponseEntity.ok(orderService.rejectOrder(orderId));
-    }
-
-    @PatchMapping("/preparing/{orderId}")
-    public ResponseEntity<String> markOrderPreparing(@PathVariable Long orderId) {
-        return ResponseEntity.ok(orderService.markOrderPreparing(orderId));
-    }
-
-    @PatchMapping("/ready/{orderId}")
-    public ResponseEntity<String> markOrderReadyForPickup(@PathVariable Long orderId) {
-        return ResponseEntity.ok(orderService.markOrderReadyForPickup(orderId));
-    }
 }

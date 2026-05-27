@@ -16,8 +16,4 @@ public interface OrderService {
     OrderDetailsResponse updateOrderStatus(Long orderId, String status);
     OrderDetailsResponse cancelOrder(Long orderId);
     List<OrderSummaryResponse> getOrdersByRestaurantId(Long restaurantId);
-    OrderDetailsResponse acceptOrder(Long orderId);
-    OrderDetailsResponse rejectOrder(Long orderId);
-    String markOrderPreparing(Long orderId);
-    String markOrderReadyForPickup(Long orderId);
 }
