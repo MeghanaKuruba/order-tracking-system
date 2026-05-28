@@ -1,17 +1,15 @@
 package com.ordertracking.restaurant.entity;
 
 public enum OrderStatus {
-    CREATED,
     ACCEPTED,
     PENDING_PAYMENT,
-    CONFIRMED,
     REJECTED,
     PREPARING,
     READY_FOR_PICKUP,
     PICKED_UP,
     OUT_FOR_DELIVERY,
     DELIVERED,
-    REFUND_INITIATED,
+    ASSIGNED,
     REFUNDED,
     CANCELLED
 }

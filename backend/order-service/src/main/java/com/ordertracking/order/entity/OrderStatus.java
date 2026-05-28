@@ -3,6 +3,7 @@ package com.ordertracking.order.entity;
 public enum OrderStatus {
     CREATED,
     ACCEPTED,
+    ASSIGNED,
     PENDING_PAYMENT,
     CONFIRMED,
     REJECTED,
