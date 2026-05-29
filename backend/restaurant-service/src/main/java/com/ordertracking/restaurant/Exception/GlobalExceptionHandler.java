@@ -22,6 +22,12 @@ public class GlobalExceptionHandler {
          return buildErrorResponse(HttpStatus.NOT_FOUND, "Restaurant Not Found", ex.getMessage(), request);
      }
 
+     @ExceptionHandler(OrderRejectionNotAllowedException.class)
+     public ResponseEntity<ErrorResponse> handleOrderRejectionNotAllowedException(
+             RestaurantNotFoundException ex, HttpServletRequest request) {
+         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Order Can Not Be Rejected", ex.getMessage(), request);
+     }
+
      @ExceptionHandler(RestaurantClosedException.class)
      public ResponseEntity<ErrorResponse> handleRestaurantClosedException(
              RestaurantClosedException ex, HttpServletRequest request) {
