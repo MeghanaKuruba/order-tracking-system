@@ -246,6 +246,8 @@ public class RestaurantServiceImpl implements RestaurantService {
         RestaurantOrderStatusEvent event =
                 RestaurantOrderStatusEvent.builder()
                         .orderId(order.getOrderId())
+                        .customerId(order.getCustomerId())
+                        .restaurantId(order.getRestaurantId())
                         .orderStatus("READY_FOR_PICKUP")
                         .build();
         producer.sendRestaurantOrderStatusEvent(event);
@@ -263,6 +265,9 @@ public class RestaurantServiceImpl implements RestaurantService {
         RestaurantOrder order = restaurantOrderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
 
+        if(order.getStatus() != OrderStatus.PREPARING){
+            throw new OrderRejectionNotAllowedException("Only Preparing orders can be rejected");
+        }
         order.setStatus(OrderStatus.REJECTED);
 
         restaurantOrderRepository.save(order);
@@ -270,6 +275,8 @@ public class RestaurantServiceImpl implements RestaurantService {
         RestaurantOrderStatusEvent event =
                 RestaurantOrderStatusEvent.builder()
                         .orderId(order.getOrderId())
+                        .customerId(order.getCustomerId())
+                        .restaurantId(order.getRestaurantId())
                         .orderStatus("REJECTED")
                         .build();
         producer.sendRestaurantOrderStatusEvent(event);

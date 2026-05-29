@@ -1,9 +1,10 @@
-package com.ordertracking.payment.kafka;
+package com.ordertracking.payment.kafka.consumer;
 
 import com.ordertracking.payment.dto.OrderCreatedEvent;
 import com.ordertracking.payment.dto.PaymentSuccessEvent;
 import com.ordertracking.payment.entity.Payment;
 import com.ordertracking.payment.entity.PaymentStatus;
+import com.ordertracking.payment.kafka.producer.PaymentEventProducer;
 import com.ordertracking.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;

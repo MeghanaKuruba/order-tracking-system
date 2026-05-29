@@ -1,4 +1,4 @@
-package com.ordertracking.payment.kafka;
+package com.ordertracking.payment.kafka.producer;
 
 import com.ordertracking.payment.dto.PaymentSuccessEvent;
 import lombok.RequiredArgsConstructor;
