@@ -10,10 +10,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class OrderReadyForPickupEvent {
+public class DeliveryResponse {
     private Long orderId;
-    private Long restaurantId;
     private String customerId;
-    private String status;
-    private Address restaurantAddress;
+    private Address deliveryAddress;
 }

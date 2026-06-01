@@ -69,6 +69,8 @@ public class DeliveryServiceImpl implements DeliveryService {
         partner.setAvailable(true);
         DeliveryStatusUpdatedEvent event = DeliveryStatusUpdatedEvent.builder()
                 .orderId(delivery.getOrderId())
+                .restaurantId(delivery.getRestaurantId())
+                .customerId(delivery.getCustomerId())
                 .deliveryStatus(DeliveryStatus.DELIVERED.name())
                 .build();
         deliveryStatusProducer.sendDeliveryStatusUpdatedEvent(event);

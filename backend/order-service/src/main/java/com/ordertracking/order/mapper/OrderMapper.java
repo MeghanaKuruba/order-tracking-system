@@ -103,15 +103,4 @@ public class OrderMapper {
         );
     }
 
-    public OrderReadyForPickupEvent mapToOrderReadyForPickupEvent(Order order) {
-        if (order == null) {
-            return null;
-        }
-        return new OrderReadyForPickupEvent(
-                order.getOrderId(),
-                order.getRestaurantId(),
-                order.getCustomerId(),
-                order.getStatus().name()
-        );
-    }
 }

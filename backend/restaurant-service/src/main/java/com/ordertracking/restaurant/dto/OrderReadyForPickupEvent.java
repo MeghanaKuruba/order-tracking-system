@@ -1,6 +1,6 @@
-package com.ordertracking.delivery.dto;
+package com.ordertracking.restaurant.dto;
 
-import com.ordertracking.delivery.entity.Address;
+import com.ordertracking.restaurant.entity.Address;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +14,5 @@ public class OrderReadyForPickupEvent {
     private Long orderId;
     private Long restaurantId;
     private String customerId;
-    private String status;
     private Address restaurantAddress;
 }

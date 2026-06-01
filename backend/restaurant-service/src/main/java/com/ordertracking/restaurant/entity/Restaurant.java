@@ -20,8 +20,8 @@ public class Restaurant {
     private Long id;
     @NotNull
     private String name;
-    @NotNull
-    private String address;
+    @Embedded
+    private Address address;
     private String cuisineType;
     private boolean active;
     private boolean open;
