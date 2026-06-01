@@ -1,5 +1,6 @@
 package com.ordertracking.restaurant.dto;
 
+import com.ordertracking.restaurant.entity.Address;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,6 +13,6 @@ public class RestaurantRequest {
     @NotNull
     private String name;
     @NotNull
-    private String address;
+    private Address address;
     private String cuisineType;
 }

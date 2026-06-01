@@ -1,13 +1,12 @@
 package com.ordertracking.restaurant.service.impl;
 
 import com.ordertracking.restaurant.Exception.*;
-import com.ordertracking.restaurant.dto.RestaurantAvailabilityResponse;
-import com.ordertracking.restaurant.dto.RestaurantOrderStatusEvent;
-import com.ordertracking.restaurant.dto.RestaurantRequest;
-import com.ordertracking.restaurant.dto.RestaurantResponse;
+import com.ordertracking.restaurant.dto.*;
+import com.ordertracking.restaurant.entity.Address;
 import com.ordertracking.restaurant.entity.OrderStatus;
 import com.ordertracking.restaurant.entity.Restaurant;
 import com.ordertracking.restaurant.entity.RestaurantOrder;
+import com.ordertracking.restaurant.kafka.producer.OrderReadyForPickUpProducer;
 import com.ordertracking.restaurant.kafka.producer.RestaurantOrderStatusProducer;
 import com.ordertracking.restaurant.repository.RestaurantOrderRepository;
 import com.ordertracking.restaurant.repository.RestaurantRepository;
@@ -26,7 +25,9 @@ public class RestaurantServiceImpl implements RestaurantService {
 
     private final RestaurantOrderRepository restaurantOrderRepository;
 
-    private final RestaurantOrderStatusProducer producer;
+    private final RestaurantOrderStatusProducer restaurantOrderStatusProducer;
+
+    private final OrderReadyForPickUpProducer orderReadyForPickUpProducer;
 
     /**
      * Create a new restaurant. Throws exception if a restaurant with the same name already exists.
@@ -129,10 +130,11 @@ public class RestaurantServiceImpl implements RestaurantService {
             existingRestaurant.setName(restaurant.getName());
                 changed = true;
         }
-        if(restaurant.getAddress() != null && !restaurant.getAddress().isBlank()
-                && !restaurant.getAddress().equalsIgnoreCase(existingRestaurant.getAddress())) {
+        if (restaurant.getAddress() != null
+                && !restaurant.getAddress().equals(existingRestaurant.getAddress())) {
+
             existingRestaurant.setAddress(restaurant.getAddress());
-                changed = true;
+            changed = true;
         }
         if (restaurant.getCuisineType() != null && !restaurant.getCuisineType().isBlank()
                 && !restaurant.getCuisineType().equalsIgnoreCase(existingRestaurant.getCuisineType())) {
@@ -239,6 +241,9 @@ public class RestaurantServiceImpl implements RestaurantService {
         RestaurantOrder order = restaurantOrderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
 
+        Restaurant restaurant = restaurantRepository.findById(order.getRestaurantId())
+                .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found"));
+
         order.setStatus(OrderStatus.READY_FOR_PICKUP);
 
         restaurantOrderRepository.save(order);
@@ -250,7 +255,15 @@ public class RestaurantServiceImpl implements RestaurantService {
                         .restaurantId(order.getRestaurantId())
                         .orderStatus("READY_FOR_PICKUP")
                         .build();
-        producer.sendRestaurantOrderStatusEvent(event);
+        restaurantOrderStatusProducer.sendRestaurantOrderStatusEvent(event);
+
+        OrderReadyForPickupEvent event1 = OrderReadyForPickupEvent.builder()
+                .orderId(order.getOrderId())
+                .restaurantId(order.getRestaurantId())
+                .customerId(order.getCustomerId())
+                .restaurantAddress(restaurant.getAddress())
+                .build();
+        orderReadyForPickUpProducer.orderReadyForPickUpEvent(event1);
         return "Order marked as ready for pickup";
     }
 
@@ -279,7 +292,7 @@ public class RestaurantServiceImpl implements RestaurantService {
                         .restaurantId(order.getRestaurantId())
                         .orderStatus("REJECTED")
                         .build();
-        producer.sendRestaurantOrderStatusEvent(event);
+        restaurantOrderStatusProducer.sendRestaurantOrderStatusEvent(event);
         return "Order rejected";
     }
 
@@ -310,9 +323,16 @@ public class RestaurantServiceImpl implements RestaurantService {
         RestaurantResponse response = new RestaurantResponse();
         response.setId(restaurant.getId());
         response.setName(restaurant.getName());
-        response.setAddress(restaurant.getAddress());
+        Address address = new Address();
+        address.setStreet(restaurant.getAddress().getStreet());
+        address.setCity(restaurant.getAddress().getCity());
+        address.setState(restaurant.getAddress().getState());
+        address.setPinCode(restaurant.getAddress().getPinCode());
+        address.setCountry(restaurant.getAddress().getCountry());
+        response.setAddress(address);
         response.setCuisineType(restaurant.getCuisineType());
         response.setActive(restaurant.isActive());
         return response;
     }
+
 }

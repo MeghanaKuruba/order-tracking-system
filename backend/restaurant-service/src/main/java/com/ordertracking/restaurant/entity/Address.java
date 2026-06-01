@@ -1,16 +1,16 @@
-package com.ordertracking.delivery.entity;
+package com.ordertracking.restaurant.entity;
 
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Embeddable
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@Embeddable
+@Table(name = "addresses")
 public class Address {
     private String street;
     private String city;

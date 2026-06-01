@@ -1,9 +1,6 @@
 package com.ordertracking.delivery.service.impl;
 
-import com.ordertracking.delivery.dto.DeliveryPartnerRequest;
-import com.ordertracking.delivery.dto.DeliveryPartnerResponse;
-import com.ordertracking.delivery.dto.DeliveryStatusUpdatedEvent;
-import com.ordertracking.delivery.dto.RestaurantOrderStatusEvent;
+import com.ordertracking.delivery.dto.*;
 import com.ordertracking.delivery.entity.Delivery;
 import com.ordertracking.delivery.entity.DeliveryPartner;
 import com.ordertracking.delivery.entity.DeliveryStatus;
@@ -17,6 +14,7 @@ import com.ordertracking.delivery.service.DeliveryPartnerService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 
@@ -31,6 +29,10 @@ public class DeliveryPartnerServiceImpl implements DeliveryPartnerService {
     private final DeliveryRepository deliveryRepository;
 
     private final DeliveryStatusProducer deliveryStatusProducer;
+
+    private final RestTemplate restTemplate;
+
+    private final String orderServiceUrl = "http://localhost:8082/api/orders/";
 
     public DeliveryPartnerResponse addDeliveryPartner(DeliveryPartnerRequest request) {
         DeliveryPartner deliveryPartner = deliveryPartnerMapper.mapToEntity(request);
@@ -62,12 +64,16 @@ public class DeliveryPartnerServiceImpl implements DeliveryPartnerService {
 
     @Override
     @Transactional
-    public void assignDeliveryPartner(RestaurantOrderStatusEvent event) {
+    public void assignDeliveryPartner(OrderReadyForPickupEvent event) {
         DeliveryPartner partner = deliveryPartnerRepository.findAll()
                 .stream()
                 .filter(p -> p.getActive() && p.getAvailable())
                 .findFirst()
                 .orElseThrow(() -> new DeliveryPartnerNotAvailableException("No delivery partner available"));
+
+        DeliveryResponse response = restTemplate.getForObject(
+                orderServiceUrl+event.getOrderId(), DeliveryResponse.class);
+
         partner.setAvailable(false);
         deliveryPartnerRepository.save(partner);
 
@@ -75,17 +81,23 @@ public class DeliveryPartnerServiceImpl implements DeliveryPartnerService {
                 .orderId(event.getOrderId())
                 .restaurantId(event.getRestaurantId())
                 .customerId(event.getCustomerId())
+                .deliveryAddress(response.getDeliveryAddress())
+                .restaurantAddress(event.getRestaurantAddress())
                 .status(DeliveryStatus.ASSIGNED)
                 .deliveryPartner(partner)
                 .assignedAt(LocalDateTime.now())
                 .build();
-        deliveryRepository.save(delivery);
-        DeliveryStatusUpdatedEvent event1 = DeliveryStatusUpdatedEvent.builder()
-                        .orderId(delivery.getOrderId())
-                                .deliveryStatus("ASSIGNED")
-                                        .build();
 
-        deliveryStatusProducer.sendDeliveryStatusUpdatedEvent(event1);
+        deliveryRepository.save(delivery);
+
+        DeliveryStatusUpdatedEvent statusEvent = DeliveryStatusUpdatedEvent.builder()
+                .orderId(event.getOrderId())
+                .restaurantId(event.getRestaurantId())
+                .customerId(event.getCustomerId())
+                .deliveryStatus(DeliveryStatus.ASSIGNED.name())
+                .build();
+
+        deliveryStatusProducer.sendDeliveryStatusUpdatedEvent(statusEvent);
 
         System.out.println("Assigned delivery partner " + partner.getName() + " to order " + event.getOrderId());
     }
