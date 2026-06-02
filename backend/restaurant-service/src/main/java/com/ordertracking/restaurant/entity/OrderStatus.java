@@ -2,6 +2,7 @@ package com.ordertracking.restaurant.entity;
 
 public enum OrderStatus {
     ACCEPTED,
+    SEARCHING_FOR_PARTNER,
     PENDING_PAYMENT,
     REJECTED,
     PREPARING,
