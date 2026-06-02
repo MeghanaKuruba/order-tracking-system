@@ -8,16 +8,21 @@ import com.ordertracking.delivery.exception.DeliveryNotFoundException;
 import com.ordertracking.delivery.exception.InvalidDeliveryStateException;
 import com.ordertracking.delivery.kafka.DeliveryStatusProducer;
 import com.ordertracking.delivery.repository.DeliveryRepository;
+import com.ordertracking.delivery.service.DeliveryPartnerService;
 import com.ordertracking.delivery.service.DeliveryService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class DeliveryServiceImpl implements DeliveryService {
 
     private final DeliveryRepository deliveryRepository;
+
+    private final DeliveryPartnerService deliveryPartnerService;
 
     private final DeliveryStatusProducer deliveryStatusProducer;
     @Override
@@ -77,4 +82,6 @@ public class DeliveryServiceImpl implements DeliveryService {
         deliveryRepository.save(delivery);
         return "Order delivered successfully";
     }
+
+
 }

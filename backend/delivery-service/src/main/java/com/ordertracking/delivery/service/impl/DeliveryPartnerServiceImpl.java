@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -65,17 +67,9 @@ public class DeliveryPartnerServiceImpl implements DeliveryPartnerService {
     @Override
     @Transactional
     public void assignDeliveryPartner(OrderReadyForPickupEvent event) {
-        DeliveryPartner partner = deliveryPartnerRepository.findAll()
-                .stream()
-                .filter(p -> p.getActive() && p.getAvailable())
-                .findFirst()
-                .orElseThrow(() -> new DeliveryPartnerNotAvailableException("No delivery partner available"));
 
         DeliveryResponse response = restTemplate.getForObject(
-                orderServiceUrl+event.getOrderId(), DeliveryResponse.class);
-
-        partner.setAvailable(false);
-        deliveryPartnerRepository.save(partner);
+                orderServiceUrl + event.getOrderId(), DeliveryResponse.class);
 
         Delivery delivery = Delivery.builder()
                 .orderId(event.getOrderId())
@@ -83,22 +77,64 @@ public class DeliveryPartnerServiceImpl implements DeliveryPartnerService {
                 .customerId(event.getCustomerId())
                 .deliveryAddress(response.getDeliveryAddress())
                 .restaurantAddress(event.getRestaurantAddress())
-                .status(DeliveryStatus.ASSIGNED)
-                .deliveryPartner(partner)
-                .assignedAt(LocalDateTime.now())
+                .status(DeliveryStatus.SEARCHING_FOR_PARTNER)
                 .build();
 
+        delivery = deliveryRepository.save(delivery);
+
+        DeliveryStatusUpdatedEvent statusEvent = DeliveryStatusUpdatedEvent.builder()
+                .orderId(delivery.getOrderId())
+                .restaurantId(delivery.getRestaurantId())
+                .customerId(delivery.getCustomerId())
+                .deliveryStatus(DeliveryStatus.SEARCHING_FOR_PARTNER.name())
+                .build();
+
+        deliveryStatusProducer.sendDeliveryStatusUpdatedEvent(statusEvent);
+
+        tryAssignPartner(delivery);
+    }
+
+    @Override
+    public void tryAssignPartner(Delivery delivery) {
+        Optional<DeliveryPartner> partner = deliveryPartnerRepository.findAll()
+                .stream()
+                .filter(p -> p.getActive() && p.getAvailable())
+                .findFirst();
+
+        if (partner.isEmpty()){
+            System.out.println("No delivery partner available for order " + delivery.getOrderId());
+            return;
+        }
+
+        DeliveryPartner deliveryPartner = partner.get();
+
+        deliveryPartner.setAvailable(false);
+        deliveryPartnerRepository.save(deliveryPartner);
+
+        delivery.setDeliveryPartner(deliveryPartner);
+        delivery.setStatus(DeliveryStatus.ASSIGNED);
+        delivery.setAssignedAt(LocalDateTime.now());
         deliveryRepository.save(delivery);
 
         DeliveryStatusUpdatedEvent statusEvent = DeliveryStatusUpdatedEvent.builder()
-                .orderId(event.getOrderId())
-                .restaurantId(event.getRestaurantId())
-                .customerId(event.getCustomerId())
+                .orderId(delivery.getOrderId())
+                .restaurantId(delivery.getRestaurantId())
+                .customerId(delivery.getCustomerId())
                 .deliveryStatus(DeliveryStatus.ASSIGNED.name())
                 .build();
 
         deliveryStatusProducer.sendDeliveryStatusUpdatedEvent(statusEvent);
 
-        System.out.println("Assigned delivery partner " + partner.getName() + " to order " + event.getOrderId());
+        System.out.println("Assigned delivery partner " + deliveryPartner.getName() + " to order " + delivery.getOrderId());
+    }
+
+    @Override
+    @Transactional
+    public void retryPartnerAssignment() {
+        List<Delivery> deliveries = deliveryRepository.findByStatus(DeliveryStatus.SEARCHING_FOR_PARTNER);
+        for (Delivery delivery : deliveries) {
+            tryAssignPartner(delivery);
+            System.out.println("Retrying partner assignment for order " + delivery.getOrderId());
+        }
     }
 }

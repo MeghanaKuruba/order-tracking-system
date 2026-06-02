@@ -4,6 +4,7 @@ public enum OrderStatus {
     CREATED,
     ACCEPTED,
     ASSIGNED,
+    SEARCHING_FOR_PARTNER,
     PENDING_PAYMENT,
     CONFIRMED,
     REJECTED,

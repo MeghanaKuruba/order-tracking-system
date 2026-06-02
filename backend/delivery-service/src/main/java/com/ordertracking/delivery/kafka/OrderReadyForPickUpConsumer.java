@@ -23,7 +23,6 @@ public class OrderReadyForPickUpConsumer {
         System.out.println("Received message: " + message);
         try {
             OrderReadyForPickupEvent event = objectMapper.readValue(message, OrderReadyForPickupEvent.class);
-
             deliveryPartnerService.assignDeliveryPartner(event);
 
         } catch (Exception e) {

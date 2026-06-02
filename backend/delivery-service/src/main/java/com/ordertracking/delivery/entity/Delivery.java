@@ -17,10 +17,11 @@ public class Delivery {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, unique = true)
     private Long orderId;
     private Long restaurantId;
     private String customerId;
-
 
     @Embedded
     @AttributeOverrides({
@@ -31,7 +32,6 @@ public class Delivery {
             @AttributeOverride(name = "country", column = @Column(name = "delivery_country"))
     })
     private Address deliveryAddress;
-
 
     @Embedded
     @AttributeOverrides({
