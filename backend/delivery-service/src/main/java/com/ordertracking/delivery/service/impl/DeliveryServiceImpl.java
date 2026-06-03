@@ -25,6 +25,16 @@ public class DeliveryServiceImpl implements DeliveryService {
     private final DeliveryPartnerService deliveryPartnerService;
 
     private final DeliveryStatusProducer deliveryStatusProducer;
+
+    /**
+     * Marks a delivery as delivered. Validates that the delivery exists and is currently out for delivery.
+     * Updates the delivery status to DELIVERED, marks the delivery partner as available, and sends a status update event.
+     *
+     * @param deliveryId The ID of the delivery to mark as delivered
+     * @return A success message confirming the order was delivered
+     * @throws DeliveryNotFoundException If no delivery is found with the given ID
+     * @throws InvalidDeliveryStateException If the delivery is not in OUT_FOR_DELIVERY status
+     */
     @Override
     @Transactional
     public String markPickedUp(Long deliveryId) {
@@ -43,6 +53,15 @@ public class DeliveryServiceImpl implements DeliveryService {
         return "Order picked up successfully";
     }
 
+    /**
+     * Marks the delivery as delivered. Only allowed if the current status is OUT_FOR_DELIVERY.
+     * Updates the delivery partner's availability and sends a Kafka event to notify other services.
+     *
+     * @param deliveryId The ID of the delivery to mark as delivered
+     * @return A success message if the operation is successful
+     * @throws DeliveryNotFoundException If no delivery is found with the given ID
+     * @throws InvalidDeliveryStateException If the delivery is not in OUT_FOR_DELIVERY status
+     */
     @Override
     @Transactional
     public String markOutForDelivery(Long deliveryId) {
@@ -61,6 +80,13 @@ public class DeliveryServiceImpl implements DeliveryService {
         return "Order is out for delivery";
     }
 
+    /**
+     * Marks the delivery as delivered, updates the delivery partner's availability, and sends a Kafka event to notify other services.
+     * @param deliveryId The ID of the delivery to be marked as delivered.
+     * @return A success message confirming the order has been delivered.
+     * @throws DeliveryNotFoundException If no delivery is found with the given ID.
+     * @throws InvalidDeliveryStateException If the delivery is not in the OUT_FOR_DELIVERY status, preventing it from being marked as delivered.
+     */
     @Override
     @Transactional
     public String markDelivered(Long deliveryId) {
