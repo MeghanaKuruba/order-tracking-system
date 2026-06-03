@@ -10,6 +10,7 @@ public enum OrderStatus {
     PICKED_UP,
     OUT_FOR_DELIVERY,
     DELIVERED,
+    DELIVERY_EXCEPTION,
     ASSIGNED,
     REFUNDED,
     CANCELLED

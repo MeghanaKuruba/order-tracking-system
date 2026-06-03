@@ -14,4 +14,6 @@ public interface DeliveryPartnerService {
     void assignDeliveryPartner(OrderReadyForPickupEvent event);
     void tryAssignPartner(Delivery delivery);
     void retryPartnerAssignment();
+    void monitorOfflinePartners();
+    void monitorAssignedTimeouts();
 }
