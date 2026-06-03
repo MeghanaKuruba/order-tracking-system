@@ -73,13 +73,15 @@ Kafka is configured and running in:
 ---
 ## Project Structure
 ```text
-food-delivery-app/
+order-tracking-app/
 │
-├── auth-service/
-├── order-service/
-├── delivery-service/
-├── restaurant-service/
-├── payment-service/
+├──backend/
+│   ├── auth-service/
+│   ├── order-service/
+│   ├── delivery-service/
+│   ├── restaurant-service/
+│   ├── payment-service/
+├──frontend/ (planned for future development)
 ```
 ---
 ## Learning Goals Behind This Project
@@ -99,7 +101,12 @@ This project is mainly being built to understand:
 - Apache Kafka
 ### Steps
 1. Clone the repository
-2. Start Kafka in KRaft mode
+2. Start Kafka in KRaft mode(Create these topics: delivery-status-updated,
+   order-confirmed,
+   order-created,
+   order-ready-for-pickup,
+   payment-success,
+   restaurant-order-status)
 3. Run individual microservices
 4. Access APIs using Postman
 ---

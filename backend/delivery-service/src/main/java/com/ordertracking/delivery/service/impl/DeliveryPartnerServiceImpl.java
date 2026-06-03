@@ -34,6 +34,8 @@ public class DeliveryPartnerServiceImpl implements DeliveryPartnerService {
 
     private final RestTemplate restTemplate;
 
+    private LocalDateTime searchingStartedAt;
+
     private final String orderServiceUrl = "http://localhost:8082/api/orders/";
 
     public DeliveryPartnerResponse addDeliveryPartner(DeliveryPartnerRequest request) {
@@ -135,6 +137,91 @@ public class DeliveryPartnerServiceImpl implements DeliveryPartnerService {
         for (Delivery delivery : deliveries) {
             tryAssignPartner(delivery);
             System.out.println("Retrying partner assignment for order " + delivery.getOrderId());
+        }
+    }
+
+    @Override
+    public void monitorOfflinePartners() {
+        List<Delivery> deliveries = deliveryRepository.findByStatusIn(
+                List.of(
+                        DeliveryStatus.ASSIGNED,
+                        DeliveryStatus.PICKED_UP,
+                        DeliveryStatus.OUT_FOR_DELIVERY));
+
+        for (Delivery delivery : deliveries) {
+
+            DeliveryPartner partner = delivery.getDeliveryPartner();
+            if (partner != null && !partner.getActive()) {
+                System.out.println("Detected offline delivery partner " + partner.getName() + " for order " + delivery.getOrderId());
+
+                if (delivery.getStatus() == DeliveryStatus.ASSIGNED) {
+
+                        delivery.setDeliveryPartner(null);
+                        delivery.setStatus(DeliveryStatus.SEARCHING_FOR_PARTNER);
+                        deliveryRepository.save(delivery);
+
+                        DeliveryStatusUpdatedEvent statusEvent = DeliveryStatusUpdatedEvent.builder()
+                                .orderId(delivery.getOrderId())
+                                .restaurantId(delivery.getRestaurantId())
+                                .customerId(delivery.getCustomerId())
+                                .deliveryStatus(DeliveryStatus.SEARCHING_FOR_PARTNER.name())
+                                .build();
+
+                        deliveryStatusProducer.sendDeliveryStatusUpdatedEvent(statusEvent);
+
+                }else if (delivery.getStatus() == DeliveryStatus.PICKED_UP
+                        || delivery.getStatus() == DeliveryStatus.OUT_FOR_DELIVERY) {
+                        delivery.setStatus(DeliveryStatus.DELIVERY_EXCEPTION);
+                        deliveryRepository.save(delivery);
+
+                        DeliveryStatusUpdatedEvent statusEvent = DeliveryStatusUpdatedEvent.builder()
+                                .orderId(delivery.getOrderId())
+                                .restaurantId(delivery.getRestaurantId())
+                                .customerId(delivery.getCustomerId())
+                                .deliveryStatus(DeliveryStatus.DELIVERY_EXCEPTION.name())
+                                .build();
+
+                        deliveryStatusProducer.sendDeliveryStatusUpdatedEvent(statusEvent);
+
+                }
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public void monitorAssignedTimeouts(){
+        List<Delivery> deliveries = deliveryRepository.findByStatus(DeliveryStatus.ASSIGNED);
+
+        for (Delivery delivery : deliveries) {
+
+            if (delivery.getAssignedAt() == null) {
+                continue;
+            }
+            if (delivery.getAssignedAt().plusMinutes(1).isAfter(LocalDateTime.now())) {
+                continue;
+            }
+            System.out.println("Detected assigned delivery partner timeout for order " + delivery.getOrderId());
+
+            DeliveryPartner partner = delivery.getDeliveryPartner();
+
+            if (partner != null) {
+                partner.setAvailable(true);
+                deliveryPartnerRepository.save(partner);
+            }
+                delivery.setDeliveryPartner(null);
+                delivery.setStatus(DeliveryStatus.SEARCHING_FOR_PARTNER);
+                deliveryRepository.save(delivery);
+
+                DeliveryStatusUpdatedEvent statusEvent = DeliveryStatusUpdatedEvent.builder()
+                        .orderId(delivery.getOrderId())
+                        .restaurantId(delivery.getRestaurantId())
+                        .customerId(delivery.getCustomerId())
+                        .deliveryStatus(DeliveryStatus.SEARCHING_FOR_PARTNER.name())
+                        .build();
+
+                deliveryStatusProducer.sendDeliveryStatusUpdatedEvent(statusEvent);
+            System.out.println("Order " + delivery.getOrderId() + " timed out waiting for delivery partner to pick up. Reassigning...");
         }
     }
 }
