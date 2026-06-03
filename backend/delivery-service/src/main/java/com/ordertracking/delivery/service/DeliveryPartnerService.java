@@ -16,4 +16,5 @@ public interface DeliveryPartnerService {
     void retryPartnerAssignment();
     void monitorOfflinePartners();
     void monitorAssignedTimeouts();
+    void monitorSearchingTimeouts();
 }
