@@ -1,4 +1,4 @@
-package com.ordertracking.restaurant.Exception;
+package com.ordertracking.restaurant.exception;
 
 public class RestaurantNotFoundException extends RuntimeException {
     public RestaurantNotFoundException(String message) {

@@ -1,6 +1,6 @@
 package com.ordertracking.restaurant.kafka.consumer;
 
-import com.ordertracking.restaurant.Exception.OrderNotFoundException;
+import com.ordertracking.restaurant.exception.OrderNotFoundException;
 import com.ordertracking.restaurant.dto.DeliveryStatusUpdatedEvent;
 import com.ordertracking.restaurant.entity.OrderStatus;
 import com.ordertracking.restaurant.entity.RestaurantOrder;

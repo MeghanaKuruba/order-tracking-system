@@ -1,4 +1,4 @@
-package com.ordertracking.restaurant.Exception;
+package com.ordertracking.restaurant.exception;
 
 public class NoChangesFoundException extends RuntimeException {
     public NoChangesFoundException(String message) {

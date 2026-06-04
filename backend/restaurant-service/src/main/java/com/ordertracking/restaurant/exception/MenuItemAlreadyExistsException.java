@@ -1,4 +1,4 @@
-package com.ordertracking.restaurant.Exception;
+package com.ordertracking.restaurant.exception;
 
 public class MenuItemAlreadyExistsException extends RuntimeException {
     public MenuItemAlreadyExistsException(String message) {

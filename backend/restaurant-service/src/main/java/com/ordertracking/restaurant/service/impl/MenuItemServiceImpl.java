@@ -1,13 +1,12 @@
 package com.ordertracking.restaurant.service.impl;
 
-import com.ordertracking.restaurant.Exception.MenuItemAlreadyExistsException;
-import com.ordertracking.restaurant.Exception.MenuItemNotFoundException;
-import com.ordertracking.restaurant.Exception.NoChangesFoundException;
-import com.ordertracking.restaurant.Exception.RestaurantNotFoundException;
+import com.ordertracking.restaurant.exception.MenuItemAlreadyExistsException;
+import com.ordertracking.restaurant.exception.MenuItemNotFoundException;
+import com.ordertracking.restaurant.exception.NoChangesFoundException;
+import com.ordertracking.restaurant.exception.RestaurantNotFoundException;
 import com.ordertracking.restaurant.dto.MenuItemRequest;
 import com.ordertracking.restaurant.dto.MenuItemResponse;
 import com.ordertracking.restaurant.dto.MenuItemUpdateRequest;
-import com.ordertracking.restaurant.dto.RestaurantResponse;
 import com.ordertracking.restaurant.entity.MenuItem;
 import com.ordertracking.restaurant.entity.Restaurant;
 import com.ordertracking.restaurant.repository.MenuItemRepository;

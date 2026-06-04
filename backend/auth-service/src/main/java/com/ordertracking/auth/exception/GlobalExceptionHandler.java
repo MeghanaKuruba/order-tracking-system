@@ -1,5 +1,6 @@
 package com.ordertracking.auth.exception;
 
+import com.ordertracking.auth.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

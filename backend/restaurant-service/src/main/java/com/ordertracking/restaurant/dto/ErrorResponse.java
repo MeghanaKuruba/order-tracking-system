@@ -1,4 +1,4 @@
-package com.ordertracking.order.exception;
+package com.ordertracking.restaurant.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
