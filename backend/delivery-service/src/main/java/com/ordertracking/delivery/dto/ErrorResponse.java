@@ -1,4 +1,4 @@
-package com.ordertracking.auth.exception;
+package com.ordertracking.delivery.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

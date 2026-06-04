@@ -1,6 +1,4 @@
-package com.ordertracking.restaurant.Exception;
-
-import jakarta.validation.constraints.NotNull;
+package com.ordertracking.restaurant.exception;
 
 public class RestaurantAlreadyExistsException extends RuntimeException {
     public RestaurantAlreadyExistsException(String message) {

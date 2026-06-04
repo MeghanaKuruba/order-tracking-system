@@ -1,5 +1,6 @@
-package com.ordertracking.restaurant.Exception;
+package com.ordertracking.restaurant.exception;
 
+import com.ordertracking.restaurant.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

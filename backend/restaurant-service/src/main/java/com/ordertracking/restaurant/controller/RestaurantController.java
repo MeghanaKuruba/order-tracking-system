@@ -1,10 +1,8 @@
 package com.ordertracking.restaurant.controller;
 
-import com.ordertracking.restaurant.Exception.RestaurantNotFoundException;
 import com.ordertracking.restaurant.dto.RestaurantAvailabilityResponse;
 import com.ordertracking.restaurant.dto.RestaurantRequest;
 import com.ordertracking.restaurant.dto.RestaurantResponse;
-import com.ordertracking.restaurant.entity.Restaurant;
 import com.ordertracking.restaurant.repository.RestaurantRepository;
 import com.ordertracking.restaurant.service.RestaurantService;
 import lombok.RequiredArgsConstructor;
