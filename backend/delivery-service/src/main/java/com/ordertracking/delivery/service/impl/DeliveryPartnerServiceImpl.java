@@ -6,6 +6,7 @@ import com.ordertracking.delivery.entity.DeliveryPartner;
 import com.ordertracking.delivery.entity.DeliveryStatus;
 import com.ordertracking.delivery.exception.DeliveryPartnerNotAvailableException;
 import com.ordertracking.delivery.exception.DeliveryPartnerNotFoundException;
+import com.ordertracking.delivery.kafka.DeliveryAssignedProducer;
 import com.ordertracking.delivery.kafka.DeliveryStatusProducer;
 import com.ordertracking.delivery.mapper.DeliveryPartnerMapper;
 import com.ordertracking.delivery.repository.DeliveryPartnerRepository;
@@ -31,6 +32,8 @@ public class DeliveryPartnerServiceImpl implements DeliveryPartnerService {
     private final DeliveryRepository deliveryRepository;
 
     private final DeliveryStatusProducer deliveryStatusProducer;
+
+    private final DeliveryAssignedProducer deliveryAssignedProducer;
 
     private final RestTemplate restTemplate;
 
@@ -127,6 +130,13 @@ public class DeliveryPartnerServiceImpl implements DeliveryPartnerService {
 
         deliveryStatusProducer.sendDeliveryStatusUpdatedEvent(statusEvent);
 
+        DeliveryAssignedEvent assignedEvent = DeliveryAssignedEvent.builder()
+                .orderId(delivery.getOrderId())
+                .deliveryPartnerId(null)
+                .build();
+
+        deliveryAssignedProducer.sendDeliveryAssignedEvent(assignedEvent);
+
         tryAssignPartner(delivery);
     }
 
@@ -168,6 +178,13 @@ public class DeliveryPartnerServiceImpl implements DeliveryPartnerService {
                 .build();
 
         deliveryStatusProducer.sendDeliveryStatusUpdatedEvent(statusEvent);
+
+        DeliveryAssignedEvent assignedEvent = DeliveryAssignedEvent.builder()
+                .orderId(delivery.getOrderId())
+                .deliveryPartnerId(deliveryPartner.getId())
+                .build();
+
+        deliveryAssignedProducer.sendDeliveryAssignedEvent(assignedEvent);
 
         System.out.println("Assigned delivery partner " + deliveryPartner.getName() + " to order " + delivery.getOrderId());
     }

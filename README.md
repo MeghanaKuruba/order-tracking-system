@@ -101,12 +101,15 @@ This project is mainly being built to understand:
 - Apache Kafka
 ### Steps
 1. Clone the repository
-2. Start Kafka in KRaft mode(Create these topics: delivery-status-updated,
-   order-confirmed,
-   order-created,
-   order-ready-for-pickup,
-   payment-success,
-   restaurant-order-status)
+2. Start Kafka in KRaft mode
+(Create these topics: 
+   - delivery-status-updated,
+   - delivery-assigned
+   - order-confirmed,
+   - order-created,
+   - order-ready-for-pickup,
+   - payment-success,
+   - restaurant-order-status )
 3. Run individual microservices
 4. Access APIs using Postman
 ---
