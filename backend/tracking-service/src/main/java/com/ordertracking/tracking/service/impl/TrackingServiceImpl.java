@@ -4,8 +4,9 @@ import com.ordertracking.tracking.dto.LocationResponse;
 import com.ordertracking.tracking.dto.LocationUpdateRequest;
 import com.ordertracking.tracking.entity.DeliveryLocation;
 import com.ordertracking.tracking.exception.LocationNotFoundException;
-import com.ordertracking.tracking.repository.DeliveryLocationRepository;
-import com.ordertracking.tracking.service.DeliveryLocationService;
+import com.ordertracking.tracking.exception.TrackingNotFoundException;
+import com.ordertracking.tracking.repository.TrackingRepository;
+import com.ordertracking.tracking.service.TrackingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,22 +14,25 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-public class DeliveryLocationServiceImpl implements DeliveryLocationService {
+public class TrackingServiceImpl implements TrackingService {
 
-    private final DeliveryLocationRepository deliveryLocationRepository;
+    private final TrackingRepository deliveryLocationRepository;
     @Override
     public void updateLocation(LocationUpdateRequest request) {
         DeliveryLocation location = deliveryLocationRepository.findByOrderId(request.getOrderId())
-                .orElse(new DeliveryLocation());
+                .orElseThrow(() -> new TrackingNotFoundException(
+                        "Tracking record not found for orderId: " + request.getOrderId()
+                ));
 
-        location.setOrderId(request.getOrderId());
-        location.setDeliveryPartnerId(request.getDeliveryPartnerId());
+        // Update fields
         location.setLatitude(request.getLatitude());
         location.setLongitude(request.getLongitude());
         location.setUpdatedAt(LocalDateTime.now());
 
+        // Save updated record
         deliveryLocationRepository.save(location);
     }
+
 
     @Override
     public LocationResponse getLocation(Long orderId) {

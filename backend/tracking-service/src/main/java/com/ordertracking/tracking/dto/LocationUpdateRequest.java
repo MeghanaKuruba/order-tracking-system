@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class LocationUpdateRequest {
     private Long orderId;
-    private Long deliveryPartnerId;
     private Double latitude;
     private Double longitude;
 }

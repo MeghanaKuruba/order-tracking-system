@@ -22,6 +22,11 @@ public class GlobalExceptionHandler {
          return buildErrorResponse(HttpStatus.NOT_FOUND, "Location Not Found", ex.getMessage(), request);
      }
 
+     @ExceptionHandler(TrackingNotFoundException.class)
+     public ResponseEntity<ErrorResponse> handleTrackingNotFoundException(
+           TrackingNotFoundException ex, HttpServletRequest request) {
+         return buildErrorResponse(HttpStatus.NOT_FOUND, "Tracking Not Found", ex.getMessage(), request);
+     }
     private ResponseEntity<ErrorResponse> buildErrorResponse(
             HttpStatus status, String error, String message, HttpServletRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(

@@ -2,7 +2,7 @@ package com.ordertracking.tracking.controller;
 
 import com.ordertracking.tracking.dto.LocationResponse;
 import com.ordertracking.tracking.dto.LocationUpdateRequest;
-import com.ordertracking.tracking.service.DeliveryLocationService;
+import com.ordertracking.tracking.service.TrackingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,18 +10,18 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/delivery-location")
 @RequiredArgsConstructor
-public class DeliveryLocationController {
+public class TrackingController {
 
-    private final DeliveryLocationService deliveryLocationService;
+    private final TrackingService trackingService;
 
     @PostMapping("/update")
     public ResponseEntity<String> updateLocation(@RequestBody LocationUpdateRequest request) {
-        deliveryLocationService.updateLocation(request);
+        trackingService.updateLocation(request);
         return ResponseEntity.ok("Location updated successfully");
     }
 
-    @GetMapping("/{orderId}")
+    @GetMapping("/orders/{orderId}")
     public ResponseEntity<LocationResponse> getLocation(@PathVariable Long orderId) {
-        return ResponseEntity.ok(deliveryLocationService.getLocation(orderId));
+        return ResponseEntity.ok(trackingService.getLocation(orderId));
     }
 }

@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface DeliveryLocationRepository extends JpaRepository<DeliveryLocation, Long> {
+public interface TrackingRepository extends JpaRepository<DeliveryLocation, Long> {
     Optional<DeliveryLocation> findByOrderId(Long orderId);
 }
