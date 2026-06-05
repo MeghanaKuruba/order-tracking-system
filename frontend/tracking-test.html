@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+</head>
+<body>
+
+<h2>Order Tracking WebSocket Test</h2>
+
+<pre id="messages"></pre>
+
+<!-- ✅ FIXED -->
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+<script>
+    console.log("Script started...");
+
+    const socket = new SockJS('http://localhost:8085/tracking-websocket');
+    const stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function () {
+        console.log('Connected ✅');
+
+        document.getElementById('messages').innerText += 'Connected\n\n';
+
+        stompClient.subscribe('/topic/orders/2', function (message) {
+            const trackingInfo = JSON.parse(message.body);
+            document.getElementById('messages').innerText += message.body + '\n\n';
+
+            console.log('Received tracking info:', trackingInfo);
+        });
+    }, function(error) {
+        console.log("Connection error:", error);
+    });
+</script>
+
+</body>
+</html>
