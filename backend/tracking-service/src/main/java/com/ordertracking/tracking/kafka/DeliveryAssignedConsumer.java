@@ -2,7 +2,7 @@ package com.ordertracking.tracking.kafka;
 
 import com.ordertracking.tracking.dto.DeliveryAssignedEvent;
 import com.ordertracking.tracking.entity.DeliveryLocation;
-import com.ordertracking.tracking.repository.DeliveryLocationRepository;
+import com.ordertracking.tracking.repository.TrackingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -17,14 +17,14 @@ public class DeliveryAssignedConsumer {
 
     private final ObjectMapper objectMapper;
 
-    private final DeliveryLocationRepository deliveryLocationRepository;
+    private final TrackingRepository trackingRepository;
     @KafkaListener(topics = "delivery-assigned", groupId = "tracking-group")
     public void consume(String message) {
         System.out.println("Received message: " + message);
         try {
             DeliveryAssignedEvent event = objectMapper.readValue(message, DeliveryAssignedEvent.class);
             Optional<DeliveryLocation> existingLocation =
-                    deliveryLocationRepository.findByOrderId(event.getOrderId());
+                    trackingRepository.findByOrderId(event.getOrderId());
 
             DeliveryLocation location;
 
@@ -48,7 +48,7 @@ public class DeliveryAssignedConsumer {
                 System.out.println("Tracking record created for orderId: " + event.getOrderId());
             }
 
-            deliveryLocationRepository.save(location);
+            trackingRepository.save(location);
 
             System.out.println("Tracking record created for orderId: " + event.getOrderId() + " with deliveryPartnerId: " + event.getDeliveryPartnerId());
         } catch (Exception e) {
