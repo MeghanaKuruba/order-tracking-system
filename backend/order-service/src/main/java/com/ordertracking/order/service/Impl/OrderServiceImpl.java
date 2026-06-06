@@ -63,34 +63,6 @@ public class OrderServiceImpl implements OrderService {
             throw new RestaurantNotAcceptingOrdersException("Restaurant is temporarily not accepting orders");
         }
 
-        //Merge duplicate items in the order request
-//        Map<Long, OrderItemRequest> mergedItems = new HashMap<>();
-//
-//        for (OrderItemRequest item : request.getOrderItems()) {
-//
-//            if (item.getMenuItemId() == null) {
-//                throw new InvalidOrderException("Menu item ID cannot be null");
-//            }
-//            if (item.getQuantity() <= 0) {
-//                throw new InvalidOrderException("Item quantity must be greater than zero");
-//            }
-//            if (item.getPrice() == null || item.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
-//                throw new InvalidOrderException("Item price must be greater than zero");
-//            }
-//            if (mergedItems.containsKey(item.getMenuItemId())) {
-//                OrderItemRequest existingItem = mergedItems.get(item.getMenuItemId());
-//
-//                if(existingItem.getPrice().compareTo(item.getPrice()) != 0) {
-//                    throw new InvalidOrderException("Duplicate items must have the same price");
-//                }
-//                existingItem.setQuantity(existingItem.getQuantity() + item.getQuantity());
-//            } else {
-//                mergedItems.put(item.getMenuItemId(), item);
-//            }
-//        }
-//
-//        List<OrderItemRequest> finalItems = new ArrayList<>(mergedItems.values());
-
         // create order entity from request
         Order order = new Order();
         order.setCustomerId(request.getCustomerId());
@@ -186,7 +158,7 @@ public class OrderServiceImpl implements OrderService {
      * @return
      */
     @Override
-    public List<OrderSummaryResponse> getOrdersByCustomerId(String customerId) {
+    public List<OrderSummaryResponse> getOrdersByCustomerId(Long customerId) {
         return orderRepository.findByCustomerId(customerId)
                 .stream()
                 .map(orderMapper::mapToOrderSummaryResponse)

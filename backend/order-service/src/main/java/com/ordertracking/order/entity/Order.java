@@ -21,7 +21,7 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long orderId;
 
-    private String customerId;
+    private Long customerId;
     private Long restaurantId;
     private BigDecimal totalAmount;
 

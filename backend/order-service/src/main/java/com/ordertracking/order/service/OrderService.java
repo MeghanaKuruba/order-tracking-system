@@ -12,7 +12,7 @@ import java.util.List;
 public interface OrderService {
     OrderResponse placeOrder(PlaceOrderRequest request);
     OrderDetailsResponse getOrderById(Long orderId);
-    List<OrderSummaryResponse> getOrdersByCustomerId(String customerId);
+    List<OrderSummaryResponse> getOrdersByCustomerId(Long customerId);
     OrderDetailsResponse updateOrderStatus(Long orderId, String status);
     OrderDetailsResponse cancelOrder(Long orderId);
     List<OrderSummaryResponse> getOrdersByRestaurantId(Long restaurantId);

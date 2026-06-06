@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class DeliveryResponse {
     private Long orderId;
-    private String customerId;
+    private Long customerId;
     private Address deliveryAddress;
 }
