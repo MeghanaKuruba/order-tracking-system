@@ -36,7 +36,6 @@ public class GlobalExceptionHandler {
              CartNotFoundException ex, HttpServletRequest request) {
          return buildErrorResponse(HttpStatus.NOT_FOUND, "Cart Not Found", ex.getMessage(), request);
      }
-
     private ResponseEntity<ErrorResponse> buildErrorResponse(
             HttpStatus status, String error, String message, HttpServletRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(

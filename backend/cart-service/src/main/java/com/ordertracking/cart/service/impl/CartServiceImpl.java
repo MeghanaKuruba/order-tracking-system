@@ -22,6 +22,15 @@ import java.util.Optional;
 public class CartServiceImpl implements CartService {
 
     private final CartRepository cartRepository;
+
+    /**
+     * Adds an item to the customer's cart. If the cart does not exist, it creates a new one.
+     * Validates the request parameters and ensures that items from different restaurants cannot be added to the same cart.
+     *
+     * @param request The request containing details of the item to be added to the cart.
+     * @throws InvalidCartItemException if any of the request parameters are invalid.
+     * @throws RestaurantMismatchException if trying to add items from different restaurants to the same cart.
+     */
     @Override
     public void addItemToCart(AddItemRequest request) {
 
@@ -88,6 +97,13 @@ public class CartServiceImpl implements CartService {
         cartRepository.save(cart);
     }
 
+    /**
+     * Retrieves the cart details for a given customer ID. If the cart does not exist, it throws a CartNotFoundException.
+     *
+     * @param customerId The ID of the customer whose cart is to be retrieved.
+     * @return A CartResponse object containing the cart details.
+     * @throws CartNotFoundException if no cart is found for the given customer ID.
+     */
     @Override
     public CartResponse getCartByCustomerId(Long customerId) {
             Cart cart = cartRepository.findByCustomerId(customerId)
