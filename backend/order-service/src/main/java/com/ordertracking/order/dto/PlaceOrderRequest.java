@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PlaceOrderRequest {
-    private String customerId;
+    private Long customerId;
     private Long restaurantId;
     private AddressRequest deliveryAddress;
     private List<OrderItemRequest> orderItems;

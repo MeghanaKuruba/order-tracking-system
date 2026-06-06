@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 public class OrderDetailsResponse {
     private Long orderId;
-    private String customerId;
+    private Long customerId;
     private Long restaurantId;
     private OrderStatus status;
     private BigDecimal totalAmount;

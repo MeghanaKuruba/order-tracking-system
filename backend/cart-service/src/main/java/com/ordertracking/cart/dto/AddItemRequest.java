@@ -1,18 +1,20 @@
-package com.ordertracking.order.dto;
+package com.ordertracking.cart.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class OrderCreatedEvent {
-    private Long orderId;
+@Builder
+public class AddItemRequest {
     private Long customerId;
     private Long restaurantId;
-    private String status;
-    private BigDecimal totalAmount;
+    private Long menuItemId;
+    private String menuItemName;
+    private Integer quantity;
+    private BigDecimal price;
 }

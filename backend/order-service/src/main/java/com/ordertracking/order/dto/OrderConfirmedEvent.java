@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 public class OrderConfirmedEvent {
     private Long orderId;
     private Long restaurantId;
-    private String customerId;
+    private Long customerId;
     private String status;
     private BigDecimal totalAmount;
 }

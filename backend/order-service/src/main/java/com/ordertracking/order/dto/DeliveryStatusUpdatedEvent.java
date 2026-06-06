@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 public class DeliveryStatusUpdatedEvent {
     private Long orderId;
     private Long restaurantId;
-    private String customerId;
+    private Long customerId;
     private String deliveryStatus;
 }
