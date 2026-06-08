@@ -6,5 +6,5 @@ import com.ordertracking.cart.dto.CartResponse;
 public interface CartService {
     void addItemToCart(AddItemRequest request);
     CartResponse getCartByCustomerId(Long customerId);
-    void removeItemFromCart(Long menuItemId);
+    void removeItemFromCart(Long userId, Long cartItemId);
 }

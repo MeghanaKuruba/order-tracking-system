@@ -5,9 +5,11 @@ import com.ordertracking.cart.dto.CartItemResponse;
 import com.ordertracking.cart.dto.CartResponse;
 import com.ordertracking.cart.entity.Cart;
 import com.ordertracking.cart.entity.CartItem;
+import com.ordertracking.cart.exception.CartItemNotFoundException;
 import com.ordertracking.cart.exception.CartNotFoundException;
 import com.ordertracking.cart.exception.InvalidCartItemException;
 import com.ordertracking.cart.exception.RestaurantMismatchException;
+import com.ordertracking.cart.repository.CartItemRepository;
 import com.ordertracking.cart.repository.CartRepository;
 import com.ordertracking.cart.service.CartService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,8 @@ import java.util.Optional;
 public class CartServiceImpl implements CartService {
 
     private final CartRepository cartRepository;
+
+    private final CartItemRepository cartItemRepository;
 
     /**
      * Adds an item to the customer's cart. If the cart does not exist, it creates a new one.
@@ -58,6 +62,10 @@ public class CartServiceImpl implements CartService {
                     .build();
             return cartRepository.save(newCart);
         });
+
+        if (cart.getRestaurantId() == null) {
+            cart.setRestaurantId(request.getRestaurantId());
+        }
 
         if (cart.getRestaurantId() != null &&
                 !cart.getRestaurantId().equals(request.getRestaurantId())) {
@@ -132,7 +140,37 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public void removeItemFromCart(Long menuItemId) {
+    public void removeItemFromCart(Long userId, Long itemId) {
 
+        // 1. Fetch cart
+        Cart cart = cartRepository.findByCustomerId(userId)
+                .orElseThrow(() ->
+                        new CartNotFoundException("Cart not found for user: " + userId));
+
+        // 2. Find item in cart
+        CartItem item = cart.getCartItems().stream()
+                .filter(ci -> ci.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() ->
+                        new CartItemNotFoundException("Item not found in cart"));
+
+        // 3. Remove item
+        cart.getCartItems().remove(item);
+
+        // 4. If cart becomes empty → reset restaurantId
+        if (cart.getCartItems().isEmpty()) {
+            cart.setRestaurantId(null);
+        }
+
+        // 5. Recalculate total price
+        BigDecimal total = cart.getCartItems().stream()
+                .map(CartItem::getSubTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+
+        cart.setTotalAmount(total);
+
+        // 6. Save cart
+        cartRepository.save(cart);
     }
 }
