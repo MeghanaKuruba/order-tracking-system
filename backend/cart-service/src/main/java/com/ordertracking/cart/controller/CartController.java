@@ -2,6 +2,8 @@ package com.ordertracking.cart.controller;
 
 import com.ordertracking.cart.dto.AddItemRequest;
 import com.ordertracking.cart.dto.CartResponse;
+import com.ordertracking.cart.dto.CheckoutRequest;
+import com.ordertracking.cart.dto.CheckoutResponse;
 import com.ordertracking.cart.entity.Cart;
 import com.ordertracking.cart.service.CartService;
 import jakarta.validation.Valid;
@@ -33,7 +35,7 @@ public class CartController {
      * @param customerId The ID of the customer whose cart details are to be retrieved.
      * @return A ResponseEntity containing the CartResponse with the cart details.
      */
-    @GetMapping("/{customerId}")
+    @GetMapping("/customer/{customerId}")
     public ResponseEntity<CartResponse> getCartByCustomerId(@PathVariable Long customerId) {
         CartResponse cartResponse = cartService.getCartByCustomerId(customerId);
         return ResponseEntity.ok(cartResponse);
@@ -53,5 +55,10 @@ public class CartController {
 
         cartService.removeItemFromCart(userId, itemId);
         return ResponseEntity.ok("Item removed successfully");
+    }
+
+    @PostMapping("/checkout")
+    public CheckoutResponse checkout(@RequestBody CheckoutRequest request) {
+        return ResponseEntity.ok(cartService.checkout(request)).getBody();
     }
 }
