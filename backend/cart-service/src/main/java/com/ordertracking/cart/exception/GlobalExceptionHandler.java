@@ -36,6 +36,18 @@ public class GlobalExceptionHandler {
              CartNotFoundException ex, HttpServletRequest request) {
          return buildErrorResponse(HttpStatus.NOT_FOUND, "Cart Not Found", ex.getMessage(), request);
      }
+
+     @ExceptionHandler(EmptyCartException.class)
+     public ResponseEntity<ErrorResponse> handleEmptyCartException(
+           EmptyCartException ex, HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Empty Cart", ex.getMessage(), request);
+     }
+
+     @ExceptionHandler(OrderServiceException.class)
+     public ResponseEntity<ErrorResponse> handleOrderServiceException(
+            OrderServiceException ex, HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.BAD_GATEWAY, "Order Service Error", ex.getMessage(), request);
+     }
     private ResponseEntity<ErrorResponse> buildErrorResponse(
             HttpStatus status, String error, String message, HttpServletRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
