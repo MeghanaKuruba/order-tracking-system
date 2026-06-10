@@ -1,11 +1,11 @@
 package com.ordertracking.delivery.kafka;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ordertracking.delivery.dto.DeliveryAssignedEvent;
 import com.ordertracking.delivery.dto.DeliveryStatusUpdatedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import tools.jackson.databind.ObjectMapper;
 
 @Service
 @RequiredArgsConstructor

@@ -1,11 +1,11 @@
 package com.ordertracking.restaurant.kafka.producer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ordertracking.restaurant.dto.OrderReadyForPickupEvent;
 import com.ordertracking.restaurant.dto.RestaurantOrderStatusEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import tools.jackson.databind.ObjectMapper;
 
 @Service
 @RequiredArgsConstructor

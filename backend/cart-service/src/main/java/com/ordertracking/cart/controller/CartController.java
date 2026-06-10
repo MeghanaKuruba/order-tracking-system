@@ -45,18 +45,24 @@ public class CartController {
      * Removes an item from the cart based on the provided user ID and item ID.
      *
      * @param userId The ID of the user whose cart item is to be removed.
-     * @param itemId The ID of the cart item to be removed.
+     * @param cartItemId The ID of the cart item to be removed.
      * @return A ResponseEntity with a success message if the item is removed successfully.
      */
     @DeleteMapping("/remove")
     public ResponseEntity<String> removeItem(
             @RequestParam Long userId,
-            @RequestParam Long itemId) {
+            @RequestParam Long cartItemId) {
 
-        cartService.removeItemFromCart(userId, itemId);
+        cartService.removeItemFromCart(userId, cartItemId);
         return ResponseEntity.ok("Item removed successfully");
     }
 
+    /**
+     * Checks out the cart based on the provided CheckoutRequest.
+     *
+     * @param request The CheckoutRequest containing the details for checkout.
+     * @return A ResponseEntity containing the CheckoutResponse with the checkout details.
+     */
     @PostMapping("/checkout")
     public CheckoutResponse checkout(@RequestBody CheckoutRequest request) {
         return ResponseEntity.ok(cartService.checkout(request)).getBody();

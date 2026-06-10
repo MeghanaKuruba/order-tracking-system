@@ -1,5 +1,6 @@
 package com.ordertracking.restaurant.kafka.consumer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ordertracking.restaurant.dto.OrderConfirmedEvent;
 import com.ordertracking.restaurant.dto.RestaurantOrderStatusEvent;
 import com.ordertracking.restaurant.entity.OrderStatus;
@@ -9,7 +10,6 @@ import com.ordertracking.restaurant.repository.RestaurantOrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
-import tools.jackson.databind.ObjectMapper;
 
 @Service
 @RequiredArgsConstructor

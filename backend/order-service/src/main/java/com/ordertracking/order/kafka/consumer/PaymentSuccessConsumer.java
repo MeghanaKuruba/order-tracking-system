@@ -1,5 +1,6 @@
 package com.ordertracking.order.kafka.consumer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ordertracking.order.dto.OrderConfirmedEvent;
 import com.ordertracking.order.dto.PaymentSuccessEvent;
 import com.ordertracking.order.entity.Order;
@@ -10,7 +11,6 @@ import com.ordertracking.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
-import tools.jackson.databind.ObjectMapper;
 
 @Service
 @RequiredArgsConstructor

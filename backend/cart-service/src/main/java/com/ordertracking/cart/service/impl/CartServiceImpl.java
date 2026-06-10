@@ -13,8 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 
 import java.awt.*;
 import java.math.BigDecimal;
@@ -166,8 +164,17 @@ public class CartServiceImpl implements CartService {
             return response;
     }
 
+    /**
+     * Removes an item from the customer's cart based on the provided user ID and item ID. If the cart or item is not found, it throws appropriate exceptions.
+     * If the cart becomes empty after removing the item, it resets the restaurant ID and total amount.
+     *
+     * @param userId The ID of the user whose cart item is to be removed.
+     * @param cartItemId The ID of the cart item to be removed.
+     * @throws CartNotFoundException if no cart is found for the given user ID.
+     * @throws CartItemNotFoundException if no cart item is found with the given item ID in the user's cart.
+     */
     @Override
-    public void removeItemFromCart(Long userId, Long itemId) {
+    public void removeItemFromCart(Long userId, Long cartItemId) {
 
         // 1. Fetch cart
         Cart cart = cartRepository.findByCustomerId(userId)
@@ -176,7 +183,7 @@ public class CartServiceImpl implements CartService {
 
         // 2. Find item in cart
         CartItem item = cart.getCartItems().stream()
-                .filter(ci -> ci.getId().equals(itemId))
+                .filter(ci -> ci.getId().equals(cartItemId))
                 .findFirst()
                 .orElseThrow(() ->
                         new CartItemNotFoundException("Item not found in cart"));
@@ -201,6 +208,16 @@ public class CartServiceImpl implements CartService {
         cartRepository.save(cart);
     }
 
+    /**
+     * Checks out the customer's cart by placing an order through the Order Service. It validates the cart, converts cart items to order items, and handles the response from the Order Service.
+     * If the order is placed successfully, it clears the cart. If any error occurs during the order placement, it throws an OrderServiceException.
+     *
+     * @param request The CheckoutRequest containing details for checkout.
+     * @return A CheckoutResponse containing the details of the placed order.
+     * @throws CartNotFoundException if no cart is found for the given customer ID.
+     * @throws EmptyCartException if the cart is empty and cannot be checked out.
+     * @throws OrderServiceException if there is an error while placing the order through the Order Service.
+     */
     @Override
     public CheckoutResponse checkout(CheckoutRequest request) {
 
