@@ -25,7 +25,12 @@ public class Payment {
 
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
+
+    @Column(unique = true)
     private String transactionId;
+
+    @Column(unique = true)
+    private String razorpayOrderID;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

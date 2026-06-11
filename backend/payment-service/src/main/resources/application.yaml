@@ -5,6 +5,9 @@ spring:
   application:
     name: payment-service
 
+  profiles:
+    active: local
+
   kafka:
     bootstrap-servers: localhost:9092
     producer:
@@ -38,3 +41,7 @@ management:
     web:
       exposure:
         include: health,info
+
+razorpay:
+  key-id: "YOUR_TEST_KEY_ID"
+  key-secret: "YOUR_TEST_KEY_SECRET"
