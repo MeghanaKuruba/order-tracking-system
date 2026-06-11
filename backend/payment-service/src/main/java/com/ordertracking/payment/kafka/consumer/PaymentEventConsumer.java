@@ -7,6 +7,7 @@ import com.ordertracking.payment.entity.Payment;
 import com.ordertracking.payment.entity.PaymentStatus;
 import com.ordertracking.payment.kafka.producer.PaymentEventProducer;
 import com.ordertracking.payment.repository.PaymentRepository;
+import com.ordertracking.payment.service.RazorpayService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,8 @@ public class PaymentEventConsumer {
 
     private final PaymentRepository paymentRepository;
 
+    private final RazorpayService razorpayService;
+
     private final PaymentEventProducer paymentEventProducer;
 
     @KafkaListener(topics = "order-created", groupId = "payment-group")
@@ -33,19 +36,19 @@ public class PaymentEventConsumer {
             payment.setCustomerId(event.getCustomerId());
             payment.setAmount(event.getTotalAmount());
             payment.setPaymentMethod("UPI");
-            payment.setStatus(PaymentStatus.SUCCESS);
+            payment.setStatus(PaymentStatus.PENDING_PAYMENT);
             payment.setTransactionId(UUID.randomUUID().toString());
             payment.setCreatedAt(LocalDateTime.now());
             Payment savedPayment = paymentRepository.save(payment);
 
-            PaymentSuccessEvent successEvent = new PaymentSuccessEvent(
+            String razorpayOrderId = razorpayService.createRazorpayOrder(
                     savedPayment.getOrderId(),
-                    savedPayment.getPaymentId(),
-                    savedPayment.getTransactionId(),
-                    savedPayment.getStatus().name(),
                     savedPayment.getAmount()
             );
-            paymentEventProducer.sendPaymentSuccessEvent(successEvent);
+
+            savedPayment.setRazorpayOrderID(razorpayOrderId);
+
+            paymentRepository.save(savedPayment);
 
             System.out.println("Processed payment for order ID: " + event.getOrderId());
         } catch (Exception e) {

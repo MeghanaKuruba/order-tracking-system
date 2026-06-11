@@ -4,7 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
 public enum PaymentStatus {
-    PENDING,
+    PENDING_PAYMENT,
     SUCCESS,
     FAILED,
     REFUNDED

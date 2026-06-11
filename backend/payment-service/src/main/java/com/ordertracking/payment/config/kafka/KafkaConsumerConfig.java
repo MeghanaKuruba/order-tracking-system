@@ -1,4 +1,4 @@
-package com.ordertracking.payment.config;
+package com.ordertracking.payment.config.kafka;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
