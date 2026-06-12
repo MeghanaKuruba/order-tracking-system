@@ -12,7 +12,7 @@ public class PaymentMapper {
         response.setOrderId(payment.getOrderId());
         response.setCustomerId(payment.getCustomerId());
         response.setAmount(payment.getAmount());
-        response.setPaymentMethod(payment.getPaymentMethod());
+        response.setPaymentMethod(payment.getPaymentMethod().name());
         response.setStatus(payment.getStatus());
         response.setTransactionId(payment.getTransactionId());
         response.setCreatedAt(payment.getCreatedAt());

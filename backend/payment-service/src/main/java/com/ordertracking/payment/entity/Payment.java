@@ -21,7 +21,9 @@ public class Payment {
     private Long orderId;
     private String customerId;
     private BigDecimal amount;
-    private String paymentMethod;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
 
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;

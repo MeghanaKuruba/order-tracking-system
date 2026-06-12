@@ -2,11 +2,12 @@ package com.ordertracking.payment.service.impl;
 
 import com.ordertracking.payment.config.razorpay.RazorpayProperties;
 import com.ordertracking.payment.dto.PaymentCheckoutResponse;
+import com.ordertracking.payment.dto.PaymentSuccessEvent;
 import com.ordertracking.payment.dto.PaymentVerificationRequest;
 import com.ordertracking.payment.entity.Payment;
+import com.ordertracking.payment.entity.PaymentMethod;
 import com.ordertracking.payment.entity.PaymentStatus;
-import com.ordertracking.payment.exception.FailedRazorpayOrderCreation;
-import com.ordertracking.payment.exception.PaymentNotFoundException;
+import com.ordertracking.payment.exception.*;
 import com.ordertracking.payment.kafka.producer.PaymentEventProducer;
 import com.ordertracking.payment.repository.PaymentRepository;
 import com.ordertracking.payment.service.RazorpayService;
@@ -16,7 +17,10 @@ import com.razorpay.RazorpayException;
 import com.razorpay.Utils;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
@@ -24,6 +28,7 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class RazorpayServiceImpl implements RazorpayService {
 
+    private static final Logger log = LoggerFactory.getLogger(RazorpayServiceImpl.class);
     private final RazorpayClient razorpayClient;
 
     private final PaymentRepository paymentRepository;
@@ -62,8 +67,9 @@ public class RazorpayServiceImpl implements RazorpayService {
         );
     }
 
+    @Transactional
     @Override
-    public void verifyPayment(PaymentVerificationRequest request) {
+    public String verifyPayment(PaymentVerificationRequest request) {
         try{
             JSONObject options = new JSONObject();
             options.put("razorpay_order_id", request.getRazorpayOrderId());
@@ -73,21 +79,66 @@ public class RazorpayServiceImpl implements RazorpayService {
             boolean isValid = Utils.verifyPaymentSignature(options, razorpayProperties.getKeySecret());
 
             if(!isValid){
-                throw new RuntimeException("Invalid payment signature");
+                throw new PaymentVerificationException("Invalid payment signature");
             }
 
             Payment payment = paymentRepository.findByRazorpayOrderId(request.getRazorpayOrderId())
                     .orElseThrow(() -> new PaymentNotFoundException("Payment not found"));
 
-            payment.setStatus(PaymentStatus.SUCCESS);
+            if (payment.getStatus() == PaymentStatus.SUCCESS){
+                throw new PaymentAlreadyProcessedException("Payment already processed");
+            }
 
+            if (payment.getStatus() != PaymentStatus.PENDING_PAYMENT){
+                throw new InvalidPaymentStateException("Payment is not in pending state");
+            }
+
+            com.razorpay.Payment razorpayPayment = razorpayClient.payments.fetch(request.getRazorpayPaymentId());
+
+            String paymentMethod = razorpayPayment.get("method");
+
+            PaymentMethod methodEnum;
+            try {
+                methodEnum = PaymentMethod.valueOf(paymentMethod.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                log.warn("Unknown payment method from Razorpay: {}", paymentMethod);
+                methodEnum = PaymentMethod.UNKNOWN;
+            }
+
+            String status = razorpayPayment.get("status");
+            if (!"captured".equals(status)) {
+                throw new PaymentVerificationException("Payment not captured");
+            }
+
+            payment.setPaymentMethod(methodEnum);
+
+            payment.setStatus(PaymentStatus.SUCCESS);
             payment.setTransactionId(request.getRazorpayPaymentId());
 
             Payment savedPayment = paymentRepository.save(payment);
 
+            PaymentSuccessEvent event = new PaymentSuccessEvent(
+                    savedPayment.getOrderId(),
+                    savedPayment.getPaymentId(),
+                    savedPayment.getTransactionId(),
+                    savedPayment.getPaymentMethod().name(),
+                    savedPayment.getStatus().name(),
+                    savedPayment.getAmount()
+            );
+
+            try { // In production usually companies use outbox pattern,
+                // Update payment->Insert event into OUTBOX table->
+                // commit Transaction->Background process reads OUTBOX table->
+                // publishes to kafka->Marks event as published
+                paymentEventProducer.sendPaymentSuccessEvent(event);
+            }catch (Exception ex){
+                log.error("Failed to publish payment-success event for paymentId={}, error={}",
+                        savedPayment.getPaymentId(), ex.getMessage(), ex);
+            }
 
         } catch (RazorpayException e) {
-            throw new RuntimeException(e);
+            throw new PaymentVerificationException("Unable to fetch payment details from Razorpay");
         }
+        return "Payment verified successfully";
     }
 }

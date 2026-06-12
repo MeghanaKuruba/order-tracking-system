@@ -35,10 +35,9 @@ public class PaymentEventConsumer {
             payment.setOrderId(event.getOrderId());
             payment.setCustomerId(event.getCustomerId());
             payment.setAmount(event.getTotalAmount());
-            payment.setPaymentMethod("UPI");
             payment.setStatus(PaymentStatus.PENDING_PAYMENT);
-            payment.setTransactionId(UUID.randomUUID().toString());
             payment.setCreatedAt(LocalDateTime.now());
+
             Payment savedPayment = paymentRepository.save(payment);
 
             String razorpayOrderId = razorpayService.createRazorpayOrder(

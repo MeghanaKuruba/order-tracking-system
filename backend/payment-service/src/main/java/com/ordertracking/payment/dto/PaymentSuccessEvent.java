@@ -13,6 +13,7 @@ public class PaymentSuccessEvent {
     private Long orderId;
     private Long paymentId;
     private String transactionId;
+    private String paymentMethod;
     private String status;
     private BigDecimal totalAmount;
 }
