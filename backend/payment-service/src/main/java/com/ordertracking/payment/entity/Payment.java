@@ -16,8 +16,8 @@ import java.time.LocalDateTime;
 public class Payment {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String paymentId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long paymentId;
     private Long orderId;
     private String customerId;
     private BigDecimal amount;
@@ -30,7 +30,7 @@ public class Payment {
     private String transactionId;
 
     @Column(unique = true)
-    private String razorpayOrderID;
+    private String razorpayOrderId;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

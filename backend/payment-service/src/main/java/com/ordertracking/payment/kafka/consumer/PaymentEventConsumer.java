@@ -46,7 +46,7 @@ public class PaymentEventConsumer {
                     savedPayment.getAmount()
             );
 
-            savedPayment.setRazorpayOrderID(razorpayOrderId);
+            savedPayment.setRazorpayOrderId(razorpayOrderId);
 
             paymentRepository.save(savedPayment);
 
