@@ -12,13 +12,30 @@ import java.time.LocalDateTime;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(
             Exception ex, HttpServletRequest request) {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", ex.getMessage(), request);
     }
+
     @ExceptionHandler(PaymentNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handlePaymentNotFoundException(Exception ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> handlePaymentNotFoundException(PaymentNotFoundException ex, HttpServletRequest request) {
         return buildErrorResponse(HttpStatus.NOT_FOUND, "Payment Not Found", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(PaymentVerificationException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentVerificationException(PaymentVerificationException ex, HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Payment Verification Exception", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(PaymentAlreadyProcessedException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentAlreadyProcessedException(PaymentAlreadyProcessedException ex, HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Payment already processed", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InvalidPaymentStateException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidPaymentStateException(InvalidPaymentStateException ex, HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid Payment State Exception", ex.getMessage(), request);
     }
 
     private ResponseEntity<ErrorResponse> buildErrorResponse(
