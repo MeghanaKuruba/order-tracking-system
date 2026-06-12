@@ -9,10 +9,9 @@ import java.math.BigDecimal;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PaymentSuccessEvent {
-    private Long orderId;
-    private Long paymentId;
-    private String transactionId;
-    private String status;
-    private BigDecimal totalAmount;
+public class PaymentCheckoutResponse {
+    private String razorpayOrderId;
+    private String keyId;
+    private BigDecimal amount;
+    private String currency;
 }
