@@ -10,6 +10,7 @@ import com.ordertracking.order.mapper.OrderMapper;
 import com.ordertracking.order.repository.OrderRepository;
 import com.ordertracking.order.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -18,7 +19,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
@@ -173,17 +174,28 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public OrderDetailsResponse updateOrderStatus(Long orderId, String status) {
+
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
+                .orElseThrow(() ->
+                        new OrderNotFoundException("Order not found with ID: " + orderId)
+                );
+
+        // Idempotency
+        if (order.getStatus() == OrderStatus.FAILED) {
+            log.info("Order {} already marked as FAILED", orderId);
+            return orderMapper.mapToOrderDetailsResponse(order);
+        }
 
         try {
             OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase());
             order.setStatus(newStatus);
-            Order updatedOrder = orderRepository.save(order);
-            return orderMapper.mapToOrderDetailsResponse(updatedOrder);
         } catch (IllegalArgumentException e) {
-            throw new EnumError("Invalid order status: " + status);
+            throw new RuntimeException("Invalid order status: " + status);
         }
+
+        Order updatedOrder = orderRepository.save(order);
+
+        return orderMapper.mapToOrderDetailsResponse(updatedOrder);
     }
 
     /**

@@ -3,6 +3,7 @@ package com.ordertracking.payment.controller;
 import com.ordertracking.payment.dto.PaymentCheckoutResponse;
 import com.ordertracking.payment.dto.PaymentResponse;
 import com.ordertracking.payment.dto.PaymentVerificationRequest;
+import com.ordertracking.payment.entity.Payment;
 import com.ordertracking.payment.service.PaymentService;
 import com.ordertracking.payment.service.RazorpayService;
 import lombok.RequiredArgsConstructor;
@@ -35,4 +36,15 @@ public class PaymentController {
 
         return ResponseEntity.ok("Payment verified successfully");
     }
+
+
+    @PostMapping("/{paymentId}/fail")
+    public ResponseEntity<Payment> markPaymentAsFailed(
+            @PathVariable Long paymentId,
+            @RequestParam(required = false) String reason) {
+
+        Payment payment = paymentService.markPaymentAsFailed(paymentId, reason);
+        return ResponseEntity.ok(payment);
+    }
+
 }

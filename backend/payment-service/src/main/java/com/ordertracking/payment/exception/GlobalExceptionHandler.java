@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidPaymentStateException.class)
     public ResponseEntity<ErrorResponse> handleInvalidPaymentStateException(InvalidPaymentStateException ex, HttpServletRequest request) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid Payment State Exception", ex.getMessage(), request);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid Payment State", ex.getMessage(), request);
     }
 
     private ResponseEntity<ErrorResponse> buildErrorResponse(
