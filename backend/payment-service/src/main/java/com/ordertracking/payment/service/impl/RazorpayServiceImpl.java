@@ -141,4 +141,21 @@ public class RazorpayServiceImpl implements RazorpayService {
         }
         return "Payment verified successfully";
     }
+
+
+    @Transactional
+    public String retryVerification(PaymentVerificationRequest request) {
+
+        log.info("Retrying verification for orderId={}", request.getRazorpayOrderId());
+
+        Payment payment = paymentRepository.findByRazorpayOrderId(request.getRazorpayOrderId())
+                .orElseThrow(() -> new PaymentNotFoundException("Payment not found"));
+
+        if (payment.getStatus() == PaymentStatus.SUCCESS) {
+            return "Payment already verified";
+        }
+
+        return verifyPayment(request);
+    }
+
 }

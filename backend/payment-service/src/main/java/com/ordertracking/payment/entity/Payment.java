@@ -20,7 +20,7 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long paymentId;
     private Long orderId;
-    private String customerId;
+    private Long customerId;
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
@@ -36,6 +36,7 @@ public class Payment {
     private String razorpayOrderId;
 
     private String failureReason;
+    private Integer attemptNumber;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
