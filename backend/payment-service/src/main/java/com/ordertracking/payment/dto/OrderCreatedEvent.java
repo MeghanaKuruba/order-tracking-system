@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class OrderCreatedEvent {
     private Long orderId;
-    private String customerId;
+    private Long customerId;
     private Long restaurantId;
     private String status;
     private BigDecimal totalAmount;

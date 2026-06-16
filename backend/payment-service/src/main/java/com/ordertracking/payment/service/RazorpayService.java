@@ -11,4 +11,5 @@ public interface RazorpayService {
     String createRazorpayOrder(Long paymentId, BigDecimal amount);
     PaymentCheckoutResponse getCheckoutDetails(Long paymentId);
     String verifyPayment(PaymentVerificationRequest request);
+    String retryVerification(PaymentVerificationRequest request);
 }

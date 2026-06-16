@@ -37,7 +37,6 @@ public class PaymentController {
         return ResponseEntity.ok("Payment verified successfully");
     }
 
-
     @PostMapping("/{paymentId}/fail")
     public ResponseEntity<Payment> markPaymentAsFailed(
             @PathVariable Long paymentId,
@@ -47,4 +46,15 @@ public class PaymentController {
         return ResponseEntity.ok(payment);
     }
 
+    @PostMapping("/{orderId}/retry")
+    public ResponseEntity<PaymentCheckoutResponse> retryPayment(@PathVariable Long orderId) {
+        PaymentCheckoutResponse response = paymentService.retryPayment(orderId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/verify/retry")
+    public ResponseEntity<String> retryVerification(@RequestBody PaymentVerificationRequest request) {
+        String response = razorpayService.retryVerification(request);
+        return ResponseEntity.ok(response);
+    }
 }
