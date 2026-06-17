@@ -38,6 +38,11 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid Payment State", ex.getMessage(), request);
     }
 
+    @ExceptionHandler(PaymentRetryLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentRetryLimitExceededException(PaymentRetryLimitExceededException ex, HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.TOO_MANY_REQUESTS, "Maximum payment attempts exceeded", ex.getMessage(), request);
+    }
+
     private ResponseEntity<ErrorResponse> buildErrorResponse(
             HttpStatus status, String error, String message, HttpServletRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(

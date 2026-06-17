@@ -6,27 +6,18 @@ import com.ordertracking.payment.dto.PaymentFailureEvent;
 import com.ordertracking.payment.dto.PaymentResponse;
 import com.ordertracking.payment.entity.Payment;
 import com.ordertracking.payment.entity.PaymentStatus;
-import com.ordertracking.payment.exception.FailedRazorpayOrderCreation;
-import com.ordertracking.payment.exception.InvalidPaymentStateException;
-import com.ordertracking.payment.exception.PaymentNotFoundException;
+import com.ordertracking.payment.exception.*;
 import com.ordertracking.payment.kafka.producer.PaymentEventProducer;
 import com.ordertracking.payment.mapper.PaymentMapper;
 import com.ordertracking.payment.repository.PaymentRepository;
 import com.ordertracking.payment.service.PaymentService;
 import com.ordertracking.payment.service.RazorpayService;
-import com.razorpay.Order;
-import com.razorpay.RazorpayClient;
-import com.razorpay.RazorpayException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -42,6 +33,9 @@ public class PaymentServiceImpl implements PaymentService {
     private final RazorpayProperties razorpayProperties;
 
     private final PaymentEventProducer paymentEventProducer;
+
+    @Value("${payment.max-attempts}")
+    private int maxPaymentAttempts;
 
     @Override
     public PaymentResponse getPaymentByOrderId(Long orderId) {
@@ -102,56 +96,47 @@ public class PaymentServiceImpl implements PaymentService {
         return savedPayment;
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = PaymentRetryLimitExceededException.class)
+    @Override
     public PaymentCheckoutResponse retryPayment(Long orderId) {
 
         log.info("Retrying payment for orderId={}", orderId);
 
         Payment lastPayment = paymentRepository
                 .findTopByOrderIdOrderByCreatedAtDesc(orderId)
-                .orElseThrow(() -> new PaymentNotFoundException("No payment found for order"));
+                .orElseThrow(() -> new PaymentNotFoundException("No payment found for order id : " + orderId));
 
         if (lastPayment.getStatus() == PaymentStatus.SUCCESS) {
-            throw new InvalidPaymentStateException("Cannot retry a successful payment");
+            throw new PaymentAlreadyProcessedException("Payment already completed for order id : " + orderId);
         }
 
-        if (lastPayment.getStatus() == PaymentStatus.PENDING_PAYMENT) {
-            throw new InvalidPaymentStateException("Payment already in progress");
+        if (lastPayment.getAttemptNumber() > maxPaymentAttempts){
+            lastPayment.setStatus(PaymentStatus.EXPIRED);
+            paymentRepository.save(lastPayment);
+            throw new PaymentRetryLimitExceededException("Maximum payment retry attempts exceeded for order is: " + orderId);
         }
 
-        if (lastPayment.getStatus() != PaymentStatus.FAILED) {
-            throw new InvalidPaymentStateException("Payment not eligible for retry");
-        }
-
-        // Create new payment record
-        Payment newPayment = new Payment();
-        newPayment.setOrderId(orderId);
-        newPayment.setCustomerId(lastPayment.getCustomerId());
-        newPayment.setAmount(lastPayment.getAmount());
-        newPayment.setStatus(PaymentStatus.PENDING_PAYMENT);
-        newPayment.setAttemptNumber(
-                lastPayment.getAttemptNumber() == null ? 1 : lastPayment.getAttemptNumber() + 1
-        );
-
-        Payment savedPayment = paymentRepository.save(newPayment);
-
-        // Create Razorpay order with correct paymentId
         String razorpayOrderId = razorpayService.createRazorpayOrder(
-                savedPayment.getPaymentId(),
-                savedPayment.getAmount()
+                lastPayment.getPaymentId(), lastPayment.getAmount()
         );
 
-        savedPayment.setRazorpayOrderId(razorpayOrderId);
-        paymentRepository.save(savedPayment);
+        lastPayment.setAttemptNumber(lastPayment.getAttemptNumber() + 1);
+        lastPayment.setRazorpayOrderId(razorpayOrderId);
+        lastPayment.setStatus(PaymentStatus.PENDING_PAYMENT);
+        lastPayment.setTransactionId(null);
+        lastPayment.setPaymentMethod(null);
+        lastPayment.setFailureReason(null);
+
+        Payment savedPayment = paymentRepository.save(lastPayment);
 
         log.info("Retry created: paymentId={}, razorpayOrderId={}",
                 savedPayment.getPaymentId(), razorpayOrderId);
 
-        return new PaymentCheckoutResponse(
-                razorpayOrderId,
-                razorpayProperties.getKeyId(),
-                savedPayment.getAmount(),
-                "INR"
-        );
+        return PaymentCheckoutResponse.builder()
+                .razorpayOrderId(savedPayment.getRazorpayOrderId())
+                .amount(savedPayment.getAmount())
+                .currency("INR")
+                .keyId(razorpayProperties.getKeyId())
+                .build();
     }
 }
