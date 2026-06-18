@@ -6,6 +6,6 @@ import com.ordertracking.payment.entity.Payment;
 
 public interface PaymentService {
     PaymentResponse getPaymentByOrderId(Long orderId);
-    Payment markPaymentAsFailed(Long paymentId, String reason);
+    Payment markPaymentAsFailed(String razorpayOrderId, String reason);
     PaymentCheckoutResponse retryPayment(Long orderId);
 }
