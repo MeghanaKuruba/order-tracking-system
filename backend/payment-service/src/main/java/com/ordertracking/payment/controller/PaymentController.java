@@ -7,9 +7,11 @@ import com.ordertracking.payment.entity.Payment;
 import com.ordertracking.payment.service.PaymentService;
 import com.ordertracking.payment.service.RazorpayService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/payments")
@@ -37,12 +39,12 @@ public class PaymentController {
         return ResponseEntity.ok("Payment verified successfully");
     }
 
-    @PostMapping("/{paymentId}/fail")
+    @PostMapping("/{razorpayOrderId}/fail")
     public ResponseEntity<Payment> markPaymentAsFailed(
-            @PathVariable Long paymentId,
+            @PathVariable("razorpayOrderId") String razorpayOrderId,
             @RequestParam(required = false) String reason) {
 
-        Payment payment = paymentService.markPaymentAsFailed(paymentId, reason);
+        Payment payment = paymentService.markPaymentAsFailed(razorpayOrderId, reason);
         return ResponseEntity.ok(payment);
     }
 
@@ -56,5 +58,12 @@ public class PaymentController {
     public ResponseEntity<String> retryVerification(@RequestBody PaymentVerificationRequest request) {
         String response = razorpayService.retryVerification(request);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/webhook")
+    public ResponseEntity<Void> handleWebhook(@RequestBody String payload){
+        log.info("Webhook payload: {}", payload);
+
+        return ResponseEntity.ok().build();
     }
 }
