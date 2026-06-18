@@ -46,23 +46,24 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional
-    public Payment markPaymentAsFailed(Long paymentId, String reason) {
+    public Payment markPaymentAsFailed(String razorpayOrderId, String reason) {
 
-        log.warn("Attempting to mark payment {} as FAILED", paymentId);
+        log.warn("Attempting to mark payment {} as FAILED", razorpayOrderId);
 
-        Payment payment = paymentRepository.findById(paymentId)
+        Payment payment = paymentRepository.findByRazorpayOrderId(razorpayOrderId)
                 .orElseThrow(() ->
-                        new PaymentNotFoundException("Payment not found with id: " + paymentId)
+                        new PaymentNotFoundException("Payment not found with id: " + razorpayOrderId)
                 );
 
         // Prevent invalid state transition
         if (payment.getStatus() == PaymentStatus.SUCCESS) {
-            throw new InvalidPaymentStateException("Cannot mark a successful payment as failed");
+            log.info("Payment {} already marked as SUCCESS (idempotent call)", razorpayOrderId);
+            return payment;
         }
 
         // Idempotency
         if (payment.getStatus() == PaymentStatus.FAILED) {
-            log.info("Payment {} already marked as FAILED (idempotent call)", paymentId);
+            log.info("Payment {} already marked as FAILED (idempotent call)", razorpayOrderId);
             return payment;
         }
 
@@ -91,7 +92,7 @@ public class PaymentServiceImpl implements PaymentService {
                     savedPayment.getPaymentId(), ex.getMessage(), ex);
         }
 
-        log.info("Payment {} marked as FAILED successfully", paymentId);
+        log.info("Payment {} marked as FAILED successfully", razorpayOrderId);
 
         return savedPayment;
     }
