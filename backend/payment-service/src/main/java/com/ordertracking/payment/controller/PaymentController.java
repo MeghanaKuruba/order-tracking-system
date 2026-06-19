@@ -64,6 +64,7 @@ public class PaymentController {
     public ResponseEntity<Void> handleWebhook(@RequestBody String payload){
         log.info("Webhook payload: {}", payload);
 
+
         return ResponseEntity.ok().build();
     }
 }
