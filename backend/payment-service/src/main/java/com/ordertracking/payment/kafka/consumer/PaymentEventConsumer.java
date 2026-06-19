@@ -35,6 +35,7 @@ public class PaymentEventConsumer {
             payment.setOrderId(event.getOrderId());
             payment.setCustomerId(event.getCustomerId());
             payment.setAmount(event.getTotalAmount());
+            payment.setAttemptNumber(1);
             payment.setStatus(PaymentStatus.PENDING_PAYMENT);
             payment.setCreatedAt(LocalDateTime.now());
 

@@ -5,7 +5,9 @@ import com.ordertracking.payment.dto.PaymentResponse;
 import com.ordertracking.payment.dto.PaymentVerificationRequest;
 import com.ordertracking.payment.entity.Payment;
 import com.ordertracking.payment.service.PaymentService;
+import com.ordertracking.payment.service.PaymentWebhookService;
 import com.ordertracking.payment.service.RazorpayService;
+import com.ordertracking.payment.service.impl.PaymentWebhookServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,8 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     private final RazorpayService razorpayService;
+
+    private final PaymentWebhookService paymentWebhookService;
 
     @GetMapping("/order/{orderId}")
     public ResponseEntity<PaymentResponse> getPaymentByOrderId(@PathVariable Long orderId) {
@@ -63,8 +67,12 @@ public class PaymentController {
     @PostMapping("/webhook")
     public ResponseEntity<Void> handleWebhook(@RequestBody String payload){
         log.info("Webhook payload: {}", payload);
-
-
-        return ResponseEntity.ok().build();
+        try{
+            paymentWebhookService.processWebhook(payload);
+        }
+        catch (Exception ex) {
+            log.error("Webhook processing failed", ex);
+        }
+            return ResponseEntity.ok().build();
     }
 }

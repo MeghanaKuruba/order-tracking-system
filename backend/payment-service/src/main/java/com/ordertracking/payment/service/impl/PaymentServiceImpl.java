@@ -111,7 +111,7 @@ public class PaymentServiceImpl implements PaymentService {
             throw new PaymentAlreadyProcessedException("Payment already completed for order id : " + orderId);
         }
 
-        if (lastPayment.getAttemptNumber() > maxPaymentAttempts){
+        if (lastPayment.getAttemptNumber() >= maxPaymentAttempts){
             lastPayment.setStatus(PaymentStatus.EXPIRED);
             paymentRepository.save(lastPayment);
             throw new PaymentRetryLimitExceededException("Maximum payment retry attempts exceeded for order is: " + orderId);
