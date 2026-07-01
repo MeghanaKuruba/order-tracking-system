@@ -43,6 +43,32 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.TOO_MANY_REQUESTS, "Maximum payment attempts exceeded", ex.getMessage(), request);
     }
 
+    @ExceptionHandler(InvalidWebhookSignatureException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidWebhookSignatureException(
+            InvalidWebhookSignatureException ex,
+            HttpServletRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.UNAUTHORIZED,
+                "Invalid Webhook Signature",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(WebhookProcessingException.class)
+    public ResponseEntity<ErrorResponse> handleWebhookProcessingException(
+            WebhookProcessingException ex,
+            HttpServletRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Webhook Processing Failed",
+                ex.getMessage(),
+                request
+        );
+    }
+
     private ResponseEntity<ErrorResponse> buildErrorResponse(
             HttpStatus status, String error, String message, HttpServletRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(

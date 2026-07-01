@@ -8,6 +8,7 @@ import com.ordertracking.payment.entity.Payment;
 import com.ordertracking.payment.entity.PaymentMethod;
 import com.ordertracking.payment.entity.PaymentStatus;
 import com.ordertracking.payment.exception.PaymentNotFoundException;
+import com.ordertracking.payment.exception.WebhookProcessingException;
 import com.ordertracking.payment.kafka.producer.PaymentEventProducer;
 import com.ordertracking.payment.repository.PaymentRepository;
 import com.ordertracking.payment.service.PaymentWebhookService;
@@ -51,6 +52,7 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         }
         catch (Exception ex){
             log.error("Error processing webhook payload", ex);
+            throw new WebhookProcessingException("Webhook processing failed", ex);
         }
 
     }
@@ -107,7 +109,14 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
         String razorpayOrderId =
                 failedPaymentEntity.path("order_id").asText();
+
         String failureReason = failedPaymentEntity.path("error_description").asText();
+
+        String razorpayPaymentId =
+                failedPaymentEntity.path("id").asText();
+
+        String razorpayMethod =
+                failedPaymentEntity.path("method").asText();
 
         Payment payment = paymentRepository.findByRazorpayOrderId(razorpayOrderId)
                 .orElseThrow(()-> new PaymentNotFoundException("Payment not found"));
@@ -128,6 +137,16 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         payment.setStatus(PaymentStatus.FAILED);
 
         payment.setFailureReason(failureReason);
+
+        payment.setTransactionId(razorpayPaymentId);
+
+        if (!razorpayMethod.isBlank()) {
+            payment.setPaymentMethod(
+                    PaymentMethod.valueOf(razorpayMethod.toUpperCase())
+            );
+        } else {
+            payment.setPaymentMethod(PaymentMethod.UNKNOWN);
+        }
 
         paymentRepository.save(payment);
 
