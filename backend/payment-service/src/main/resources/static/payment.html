@@ -12,7 +12,16 @@
 <script>
     async function payNow() {
         try {
-            const response = await fetch("http://localhost:8083/api/payments/1/checkout");
+            const paymentId = prompt("Enter Payment Id");
+
+            if (!paymentId) {
+                alert("Payment Id is required");
+                return;
+            }
+
+            const response = await fetch(
+                `http://localhost:8083/api/payments/${paymentId}/checkout`
+            );
             const data = await response.json();
 
             console.log("API Response:", data);

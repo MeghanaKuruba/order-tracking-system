@@ -45,6 +45,7 @@ management:
 razorpay:
   key-id: "YOUR_TEST_KEY_ID"
   key-secret: "YOUR_TEST_KEY_SECRET"
+  webhook-secret: "YOUR_WEBHOOK_SECRET"
 
 payment:
   max-attempts: 3
