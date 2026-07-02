@@ -15,10 +15,12 @@ import com.ordertracking.payment.service.PaymentWebhookService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
     private final ObjectMapper objectMapper;
@@ -33,8 +35,16 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
             JsonNode rootNode = objectMapper.readTree(payload);
             String eventType = rootNode.get("event").asText();
 
+            log.info("Received Razorpay webhook: {}", eventType);
+
             switch (eventType){
                 case "payment.captured":
+
+                    handlePaymentCaptured(rootNode);
+
+                    break;
+
+                case "order.paid":
 
                     handlePaymentCaptured(rootNode);
 
@@ -70,6 +80,13 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         String razorpayMethod =
                 paymentEntity.path("method").asText();
 
+        log.info(
+                "Processing succes webhook | OrderId={} PaymentId={} Method={}",
+                razorpayOrderId,
+                razorpayPaymentId,
+                razorpayMethod
+        );
+
         Payment payment = paymentRepository.findByRazorpayOrderId(razorpayOrderId)
                 .orElseThrow(()-> new PaymentNotFoundException("Payment not found"));
 
@@ -98,7 +115,17 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
                 payment.getAmount()
         );
 
+        log.info(
+                "Publishing PaymentSuccessEvent for Order {}",
+                payment.getOrderId()
+        );
+
         paymentEventProducer.sendPaymentSuccessEvent(event);
+
+        log.info(
+                "Completed Publishing PaymentSuccessEvent for Order {}",
+                payment.getOrderId()
+        );
     }
 
     private void handlePaymentFailed(JsonNode rootNode){
@@ -117,6 +144,14 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
         String razorpayMethod =
                 failedPaymentEntity.path("method").asText();
+
+        log.info(
+                "Processing payment.failed webhook | OrderId={} PaymentId={} Method={} Reason={}",
+                razorpayOrderId,
+                razorpayPaymentId,
+                razorpayMethod,
+                failureReason
+        );
 
         Payment payment = paymentRepository.findByRazorpayOrderId(razorpayOrderId)
                 .orElseThrow(()-> new PaymentNotFoundException("Payment not found"));
@@ -160,6 +195,16 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
                 payment.getAmount()
         );
 
+        log.info(
+                "Publishing PaymentFailureEvent for Order {}",
+                payment.getOrderId()
+        );
+
         paymentEventProducer.sendPaymentFailureEvent(event);
+
+        log.info(
+                "Completed Publishing PaymentFailureEvent for Order {}",
+                payment.getOrderId()
+        );
     }
 }

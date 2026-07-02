@@ -32,6 +32,15 @@ spring:
       ddl-auto: update
     show-sql: true
 
+  logging:
+    level:
+      root: INFO
+      com.ordertracking.restaurant: DEBUG
+
+    pattern:
+      console: "%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n"
+
+
 management:
   endpoints:
     web:
