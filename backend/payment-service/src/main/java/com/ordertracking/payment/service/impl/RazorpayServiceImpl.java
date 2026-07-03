@@ -8,8 +8,8 @@ import com.ordertracking.payment.entity.Payment;
 import com.ordertracking.payment.entity.PaymentMethod;
 import com.ordertracking.payment.entity.PaymentStatus;
 import com.ordertracking.payment.exception.*;
-import com.ordertracking.payment.kafka.producer.PaymentEventProducer;
 import com.ordertracking.payment.repository.PaymentRepository;
+import com.ordertracking.payment.service.OutboxService;
 import com.ordertracking.payment.service.RazorpayService;
 import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
@@ -35,7 +35,7 @@ public class RazorpayServiceImpl implements RazorpayService {
 
     private final RazorpayProperties razorpayProperties;
 
-    private final PaymentEventProducer paymentEventProducer;
+    private final OutboxService outboxService;
 
     @Override
     public String createRazorpayOrder(Long paymentId, BigDecimal amount) {
@@ -130,7 +130,12 @@ public class RazorpayServiceImpl implements RazorpayService {
                 // Update payment->Insert event into OUTBOX table->
                 // commit Transaction->Background process reads OUTBOX table->
                 // publishes to kafka->Marks event as published
-                paymentEventProducer.sendPaymentSuccessEvent(event);
+                outboxService.saveEvent(
+                        "PAYMENT",
+                        payment.getPaymentId(),
+                        "PAYMENT_SUCCESS",
+                        event
+                );
             }catch (Exception ex){
                 log.error("Failed to publish payment-success event for paymentId={}, error={}",
                         savedPayment.getPaymentId(), ex.getMessage(), ex);

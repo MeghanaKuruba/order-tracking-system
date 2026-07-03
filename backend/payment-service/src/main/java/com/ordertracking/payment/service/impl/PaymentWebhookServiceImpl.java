@@ -9,8 +9,8 @@ import com.ordertracking.payment.entity.PaymentMethod;
 import com.ordertracking.payment.entity.PaymentStatus;
 import com.ordertracking.payment.exception.PaymentNotFoundException;
 import com.ordertracking.payment.exception.WebhookProcessingException;
-import com.ordertracking.payment.kafka.producer.PaymentEventProducer;
 import com.ordertracking.payment.repository.PaymentRepository;
+import com.ordertracking.payment.service.OutboxService;
 import com.ordertracking.payment.service.PaymentWebhookService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,7 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
     private final PaymentRepository paymentRepository;
 
-    private final PaymentEventProducer paymentEventProducer;
+    private final OutboxService outboxService;
 
     @Override
     public void processWebhook(String payload) {
@@ -120,7 +120,12 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
                 payment.getOrderId()
         );
 
-        paymentEventProducer.sendPaymentSuccessEvent(event);
+        outboxService.saveEvent(
+                "PAYMENT",
+                payment.getPaymentId(),
+                "PAYMENT_SUCCESS",
+                event
+        );
 
         log.info(
                 "Completed Publishing PaymentSuccessEvent for Order {}",
@@ -200,7 +205,12 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
                 payment.getOrderId()
         );
 
-        paymentEventProducer.sendPaymentFailureEvent(event);
+        outboxService.saveEvent(
+                "PAYMENT",
+                payment.getPaymentId(),
+                "PAYMENT_FAILED",
+                event
+        );
 
         log.info(
                 "Completed Publishing PaymentFailureEvent for Order {}",
