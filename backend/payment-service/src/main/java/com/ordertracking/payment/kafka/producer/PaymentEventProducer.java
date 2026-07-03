@@ -1,6 +1,7 @@
 package com.ordertracking.payment.kafka.producer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ordertracking.payment.dto.PaymentExpiredEvent;
 import com.ordertracking.payment.dto.PaymentFailureEvent;
 import com.ordertracking.payment.dto.PaymentSuccessEvent;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,8 @@ public class PaymentEventProducer {
 
     public void sendPaymentSuccessEvent(PaymentSuccessEvent event) {
         try {
+            log.info("Publishing payment success event for paymentId={}", event.getPaymentId());
+
             String jsonMessage = objectMapper.writeValueAsString(event);
             kafkaTemplate.send("payment-success", jsonMessage);
         } catch (Exception e) {
@@ -35,6 +38,18 @@ public class PaymentEventProducer {
 
         } catch (Exception e) {
             throw new RuntimeException("Error publishing payment failure event", e);
+        }
+    }
+
+    public void sendPaymentExpiredEvent(PaymentExpiredEvent event){
+        try {
+            log.info("Publishing payment expired event for paymentId={}", event.getPaymentId());
+
+            String jsonMessage = objectMapper.writeValueAsString(event);
+            kafkaTemplate.send("payment-expired", jsonMessage);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error publishing payment expired event", e);
         }
     }
 }

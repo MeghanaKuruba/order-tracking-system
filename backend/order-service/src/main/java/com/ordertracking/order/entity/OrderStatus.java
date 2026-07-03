@@ -17,5 +17,6 @@ public enum OrderStatus {
     REFUND_INITIATED,
     REFUNDED,
     FAILED,
+    EXPIRED,
     CANCELLED
 }

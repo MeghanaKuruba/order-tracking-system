@@ -1,12 +1,11 @@
 package com.ordertracking.payment.scheduler;
 
-import com.ordertracking.payment.entity.Payment;
-import com.ordertracking.payment.entity.PaymentStatus;
-import com.ordertracking.payment.repository.PaymentRepository;
+import com.ordertracking.payment.service.PaymentExpiryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,23 +15,11 @@ import java.util.List;
 @Slf4j
 public class PaymentExpiryScheduler {
 
-    private final PaymentRepository paymentRepository;
+    private final PaymentExpiryService paymentExpiryService;
 
+    @Transactional
     @Scheduled(fixedRate = 10000)
-    private void expirePendingPayment() {
-        LocalDateTime expiryTime = LocalDateTime.now().minusMinutes(1);
-
-        List<Payment> expiredPayment = paymentRepository.findByStatusAndUpdatedAtBefore(
-                PaymentStatus.PENDING_PAYMENT, expiryTime
-        );
-
-        for (Payment payment : expiredPayment){
-            payment.setStatus(PaymentStatus.EXPIRED);
-
-            payment.setFailureReason("Payment expired due to inactivity");
-
-            log.info("Payment {} expired", payment.getPaymentId());
-        }
-        paymentRepository.saveAll(expiredPayment);
+    public void expirePendingPayments() {
+        paymentExpiryService.expirePendingPayments();
     }
 }

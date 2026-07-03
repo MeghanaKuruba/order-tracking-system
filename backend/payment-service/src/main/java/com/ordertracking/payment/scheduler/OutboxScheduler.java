@@ -1,6 +1,7 @@
 package com.ordertracking.payment.scheduler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ordertracking.payment.dto.PaymentExpiredEvent;
 import com.ordertracking.payment.dto.PaymentFailureEvent;
 import com.ordertracking.payment.dto.PaymentSuccessEvent;
 import com.ordertracking.payment.entity.OutboxEvent;
@@ -57,6 +58,20 @@ public class OutboxScheduler {
                         producer.sendPaymentFailureEvent(failure);
 
                         break;
+
+                    case "PAYMENT_EXPIRED":
+
+                        PaymentExpiredEvent expiredEvent =
+                                mapper.readValue(
+                                        event.getPayload(),
+                                        PaymentExpiredEvent.class);
+
+                        producer.sendPaymentExpiredEvent(expiredEvent);
+
+                        break;
+
+                    default:
+                        log.warn("Unknown event type: {}", event.getEventType());
                 }
 
                 event.setStatus(OutboxStatus.SENT);
