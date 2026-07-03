@@ -7,9 +7,9 @@ import com.ordertracking.payment.dto.PaymentResponse;
 import com.ordertracking.payment.entity.Payment;
 import com.ordertracking.payment.entity.PaymentStatus;
 import com.ordertracking.payment.exception.*;
-import com.ordertracking.payment.kafka.producer.PaymentEventProducer;
 import com.ordertracking.payment.mapper.PaymentMapper;
 import com.ordertracking.payment.repository.PaymentRepository;
+import com.ordertracking.payment.service.OutboxService;
 import com.ordertracking.payment.service.PaymentService;
 import com.ordertracking.payment.service.RazorpayService;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final RazorpayProperties razorpayProperties;
 
-    private final PaymentEventProducer paymentEventProducer;
+    private final OutboxService outboxService;
 
     @Value("${payment.max-attempts}")
     private int maxPaymentAttempts;
@@ -85,7 +85,12 @@ public class PaymentServiceImpl implements PaymentService {
                     savedPayment.getAmount()
             );
 
-            paymentEventProducer.sendPaymentFailureEvent(event);
+            outboxService.saveEvent(
+                    "PAYMENT",
+                    payment.getPaymentId(),
+                    "PAYMENT_FAILED",
+                    event
+            );
 
         } catch (Exception ex) {
             log.error("Failed to publish payment-failure event for paymentId={}, error={}",
