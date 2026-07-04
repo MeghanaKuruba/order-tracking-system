@@ -1,20 +1,41 @@
-# order-tracking-system
+# 🚀 Order Tracking System
 
-A scalable, event-driven food delivery backend system built using Java and Spring Boot microservices architecture.
+A production-inspired event-driven microservices application that simulates the complete lifecycle of an online food delivery platform—from order placement and payment processing to restaurant preparation, delivery assignment, and real-time order tracking.
 
-This project simulates a real-world production system with features like asynchronous communication (Kafka), real-time tracking (WebSockets), scheduler-based automation, and secure authentication (JWT).
+The goal of this project is to implement real-world backend concepts such as distributed communication, payment processing, reliable event publishing, schedulers, and real-time order tracking.
 
-## 🚀 Tech Stack
+# 🛠 Tech Stack
+
+Backend
 
 - Java
 - Spring Boot
 - Spring Security
-- JWT
-- Apache Kafka (KRaft Mode)
-- H2 Database
-- Maven
-- REST APIs
+- Spring Data JPA
+- Spring Scheduler
+- WebSocket
 - RestTemplate
+- REST APIs
+
+Messaging
+
+- Apache Kafka
+
+Payment Gateway
+
+- Razorpay
+
+Database
+
+- H2 Database
+
+Authentication
+
+- JWT
+
+Build Tool
+
+- Maven
 ---
 
 ## 📦 Services Created
@@ -24,7 +45,7 @@ This project simulates a real-world production system with features like asynchr
 - Delivery Service
 - Order Service
 - Restaurant Service
-- Payment Service (basic setup)
+- Payment Service (Razorpay + Outbox + Retry + Scheduler)
 - Tracking Service
 
   The services are currently being developed independently and will be expanded further as the project grows.
@@ -79,11 +100,16 @@ scheduler/
 - Exception handling and validation for delivery operations
 - Kafka event publishing for delivery status updates
 
+### 💳 Payment Service
 
-
-### 💳 Payment Service (Basic Setup)
-- Initial payment flow setup
-- Payment success event handling (Kafka-based)
+- Creates pending payments when an order is placed.
+- Integrates with Razorpay Checkout.
+- Verifies payment signatures after checkout.
+- Validates Razorpay webhook signatures.
+- Handles payment success and failure.
+- Supports configurable retry attempts.
+- Automatically expires inactive payments.
+- Publishes payment events using the Transactional Outbox Pattern.
 
 ### 📍 Tracking Service
 - Real-time delivery location updates
@@ -100,9 +126,12 @@ scheduler/
     - delivery-assigned
     - delivery-status-updated
     - payment-success
+    - payment-failed
+    - payment-expired
     - restaurant-order-status
 - Consumer implementation across services
 - Loose coupling between microservices using events
+- Transactional Outbox Pattern for reliable Kafka publishing(currently in payment service)
 
 ### 🔗 Inter-Service Communication
 - REST-based communication using RestTemplate
@@ -117,6 +146,9 @@ scheduler/
 - DTO-based request/response handling
 - Custom exception handling with global handler
 - Clean separation of responsibilities across services
+- Transactional Outbox Pattern
+- Scheduler-driven background processing
+- Event-driven consistency using Kafka
 ---
 
 ## 🚀 System Design Highlights
@@ -126,6 +158,10 @@ scheduler/
 - Scheduler-based background processing for reliability and failure handling
 - Real-time tracking using WebSocket communication
 - Microservices independently deployable and scalable
+- Transactional Outbox Pattern for reliable event publishing
+- Secure Razorpay webhook processing
+- Automatic payment expiry handling
+- Retryable payment workflow
 
 ---
 
@@ -134,15 +170,34 @@ scheduler/
 1. User adds items to the cart and places an order *(cart-to-order flow currently in progress)*
 2. Order Service creates the order
 3. Order Service publishes an **"order-created"** event to Kafka
-4. Payment Service consumes the event and marks the payment as successful and publishes an **"order-confirmed** event to Kafka
-   *(currently basic implementation; will be enhanced with real payment processing later)*
-5. Restaurant Service consumes the **"order-confirmed"** event and begins order preparation
-6. Restaurant Service publishes an **"order-ready-for-pickup"** event to Kafka
-7. Delivery Service consumes the event and initiates delivery partner assignment
-8. Scheduler continuously monitors delivery assignment and retries if required
-9. Tracking Service provides real-time delivery location updates using WebSocket *(in progress)*
+4. Payment Service consumes the event and creates a pending payment.
+5. Customer completes payment using Razorpay Checkout.
+6. Razorpay sends a secure webhook.
+7. Payment Service validates the webhook signature and updates the payment status.
+8. Payment Service stores the event using the Transactional Outbox Pattern.
+9. Outbox Scheduler publishes the payment event to Kafka.
+10. Order Service consumes the payment event and updates the order status.
+11. Restaurant Service consumes the **"order-confirmed"** event and begins order preparation
+12. Restaurant Service publishes an **"order-ready-for-pickup"** event to Kafka
+13. Delivery Service consumes the event and initiates delivery partner assignment
+14. Scheduler continuously monitors delivery assignment and retries if required
+15. Tracking Service provides real-time delivery location updates using WebSocket *(in progress)*
 
-#### ✅ Kafka is used to **synchronize and propagate order status updates across Order, Restaurant, and Delivery services**, ensuring consistency and loose coupling between microservices.
+#### ✅ Kafka is used to **synchronize and propagate order status updates across Order, Restaurant, Payment and Delivery services**, ensuring consistency and loose coupling between microservices.
+
+---
+
+## ⭐ Implemented Backend Patterns
+
+- Transactional Outbox Pattern
+- Secure Razorpay Webhook Validation
+- Event-Driven Microservices
+- Payment Retry Mechanism
+- Automatic Payment Expiry Scheduler
+- Global Exception Handling
+- Kafka-based Asynchronous Communication
+- Scheduler-Based Background Jobs
+- WebSocket-Based Real-Time Tracking
 
 ---
 
@@ -201,7 +256,18 @@ Order Service
   ▼
 Payment Service
   │
-  ├──► (payment-success) ────────► Kafka
+  ├──► (payment-success / payment-failed / payment-expired) ────────► Kafka
+  │
+  ▼
+  Scheduler
+  │
+  ├── outbox event publishing
+  ├── payment expiry handling
+  │
+  ▼
+  Order Service
+  │
+  ├──► (order-confirmed event) ─────► Kafka
   │
   ▼
 Restaurant Service
@@ -304,13 +370,157 @@ DeliveryAssignment      DeliveryMonitoring     Timeout Handlers
                   END
 
 ```
+
+## 💳 Paymet Workflow
+
+```text
+Customer places order
+↓
+Order Service publishes order-created event to Kafka
+↓
+Payment Service creates pending payment
+↓
+Razorpay Order generated
+↓
+Checkout opens
+↓
+Webhook received
+↓
+Signature validated
+↓
+Payment updated
+↓
+Outbox Event
+↓
+Kafka
+↓
+Order updated
+```
+
+## ⏰ Payment Expiry Scheduler Workflow
+
+```text
+Customer places an order
+        │
+        ▼
+Payment Service creates a payment
+(Status = PENDING_PAYMENT)
+        │
+        ▼
+Customer does not complete the payment
+within the configured timeout (1 minute)
+        │
+        ▼
+Payment Expiry Scheduler runs periodically
+(every 10 seconds)
+        │
+        ▼
+Fetch all payments with:
+• Status = PENDING_PAYMENT
+• updatedAt < Current Time - 1 minute
+        │
+        ▼
+Mark payment as EXPIRED
+        │
+        ▼
+Set failure reason:
+"Payment expired due to inactivity"
+        │
+        ▼
+Save updated payment
+        │
+        ▼
+Create PaymentExpiredEvent
+        │
+        ▼
+Store event in Outbox table
+(Transactional Outbox Pattern)
+        │
+        ▼
+Outbox Scheduler publishes event to Kafka
+        │
+        ▼
+Order Service consumes
+PAYMENT_EXPIRED event
+        │
+        ▼
+Order status updated to FAILED
+```
+
+## 📤 Transactional Outbox Pattern Workflow
+
+```text
+Business Operation Occurs
+(e.g., Payment SUCCESS / FAILED / EXPIRED)
+        │
+        ▼
+Update Payment Status
+in Payment table
+        │
+        ▼
+Create corresponding event
+(PaymentSuccessEvent /
+ PaymentFailureEvent /
+ PaymentExpiredEvent)
+        │
+        ▼
+Save event in Outbox table
+within the same database transaction
+        │
+        ▼
+Business transaction commits
+        │
+        ▼
+Outbox Scheduler runs periodically
+        │
+        ▼
+Fetch all PENDING events
+from Outbox table
+        │
+        ▼
+Publish event to Kafka
+        │
+        ▼
+Publishing Successful?
+      ┌───────────────┐
+      │               │
+     Yes             No
+      │               │
+      ▼               ▼
+Mark event as      Keep event
+SENT               as PENDING
+      │               │
+      ▼               │
+Other services        │
+consume event         │
+                      │
+            Scheduler retries
+            in the next execution
+```
+---
+## 🏛 Design Patterns Used
+
+- Transactional Outbox Pattern
+- Event-Driven Architecture
+- Scheduler Pattern
+- Producer–Consumer Pattern
+- Layered Architecture
+- DTO Pattern
+- Global Exception Handling
 ---
 ## Current Project Status
-- Backend core services implemented
-- Kafka-based event-driven communication working
+
+- Backend microservices architecture with core business workflows implemented
+- Kafka-based event-driven communication between services
+- Complete payment workflow with Razorpay integration
+- Secure webhook signature validation for payment events
+- Payment retry mechanism with configurable retry limits
+- Automatic payment expiry using scheduled jobs
+- Transactional Outbox Pattern for reliable Kafka event publishing
+- Order, Restaurant, Delivery, and Tracking workflows integrated
 - Delivery workflow and scheduler logic implemented
-- WebSocket-based live tracking integrated
-- Actively enhancing system with advanced features
+- WebSocket-based real-time order tracking implemented
+- Focused on implementing production-grade backend patterns and system reliability
 ---
 ## Database
 Currently using:
@@ -339,21 +549,24 @@ order-tracking-app/
 ---
 ## ⚡ Challenges & Solutions
 
+- Ensuring reliable event delivery → implemented the Transactional Outbox Pattern
+- Handling duplicate and fake payment callbacks → implemented Razorpay webhook signature validation
+- Managing payment failures → implemented payment retry with configurable retry limits
+- Handling abandoned payments → implemented scheduler-based automatic payment expiry
+- Maintaining consistency across microservices → implemented Kafka-based event-driven communication
+- Avoiding tight coupling between services → asynchronous communication using Kafka events
 - Handling delivery partner unavailability → solved using scheduler-based retry logic
-- Maintaining consistency across services → solved using Kafka event-driven architecture
-- Preventing data inconsistency in cart → implemented validation & exception handling
-- Avoiding tight coupling between services → used asynchronous communication via Kafka
-- Handling real-time updates → implemented WebSocket-based tracking service
-
+- Handling real-time delivery updates → implemented WebSocket-based tracking service
 ---
 ## 💡 Key Highlights
 
-- Implements real-world microservices architecture
-- Uses event-driven communication with Kafka
-- Handles failure scenarios with retry + timeout mechanisms
-- Includes scheduler-based background processing
-- Supports real-time tracking using WebSockets
-- Designed for scalability and loose coupling
+- Event-driven microservices architecture using Apache Kafka
+- Secure Razorpay payment integration with webhook signature validation
+- Transactional Outbox Pattern for reliable event publishing
+- Payment retry and automatic payment expiry mechanisms
+- Scheduler-based background processing
+- Real-time order tracking using WebSockets
+- Modular microservices designed for scalability and loose coupling
 ---
 ## Learning Goals Behind This Project
 This project is mainly being built to understand:
@@ -366,10 +579,14 @@ This project is mainly being built to understand:
 - Frontend design and integration using modern frameworks
 ---
 ## How to Run
+
 ### Prerequisites
 - Java 17+
-- Maven
+- Maven( Intellij IDE have Maven pre-installed)
 - Apache Kafka
+- Razorpay account for payment integration
+- ngrok (for exposing local webhook endpoint to Razorpay)
+- Postman (for API testing)
 
 --------------------------------------------------
 
@@ -418,19 +635,22 @@ Create file: create-topics.bat
 
 Paste:
 
-@echo off  
+@echo off
 echo Creating Kafka topics...
 
-call bin\windows\kafka-topics.bat --create --topic delivery-status-updated --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1  
-call bin\windows\kafka-topics.bat --create --topic delivery-assigned --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1  
-call bin\windows\kafka-topics.bat --create --topic order-confirmed --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1  
-call bin\windows\kafka-topics.bat --create --topic order-created --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1  
-call bin\windows\kafka-topics.bat --create --topic order-ready-for-pickup --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1  
-call bin\windows\kafka-topics.bat --create --topic payment-success --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1  
+call bin\windows\kafka-topics.bat --create --topic delivery-status-updated --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+call bin\windows\kafka-topics.bat --create --topic delivery-assigned --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+call bin\windows\kafka-topics.bat --create --topic order-confirmed --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+call bin\windows\kafka-topics.bat --create --topic order-created --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+call bin\windows\kafka-topics.bat --create --topic order-ready-for-pickup --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+call bin\windows\kafka-topics.bat --create --topic payment-success --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
 call bin\windows\kafka-topics.bat --create --topic restaurant-order-status --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+call bin\windows\kafka-topics.bat --create --topic payment-failed --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+call bin\windows\kafka-topics.bat --create --topic payment-expired --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
 
-echo All topics created successfully!  
+echo All topics created successfully!
 pause
+
 
 Run it:
 
@@ -452,6 +672,8 @@ Required Topics:
 - order-created
 - order-ready-for-pickup
 - payment-success
+- payment-failed
+- payment-expired
 - restaurant-order-status
 
 --------------------------------------------------
@@ -480,14 +702,33 @@ Use browser or WebSocket client for real-time tracking updates
 
 ---
 ## Future Enhancements
+- Idempotency Keys for Payment Creation
+- Generic `payment-events` Kafka Topic
+- Outbox Retry Mechanism with Retry Count
+- MySQL Migration
+- Service Discovery (Eureka)
+- Spring Cloud Config Server
+- Dead Letter Queue (DLQ)
+- Optimistic Locking
+- Refund Workflow
+- Metrics & Monitoring
+- Correlation IDs
+- Admin Dashboard
 - API Gateway implementation
-- Eureka/Service Discovery
 - Frontend development using React or Angular
 - Docker and containerization
 - Redis caching
 - Notification service
 - Real-time order tracking
 - CI/CD pipeline setup
+
 ---
 ## Status
 🚀 This project is actively evolving with continuous improvements, feature additions, and production-level enhancements.
+
+---
+# 👩‍💻 Author
+
+**Meghana K**
+
+FullStack Developer | Java | Spring Boot | Microservices | Kafka
