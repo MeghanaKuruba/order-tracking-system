@@ -69,6 +69,19 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(MissingIdempotencyKeyException.class)
+    public ResponseEntity<ErrorResponse> handleMissingIdempotencyKey(
+            MissingIdempotencyKeyException ex,
+            HttpServletRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                "Missing Idempotency Key",
+                ex.getMessage(),
+                request
+        );
+    }
+
     private ResponseEntity<ErrorResponse> buildErrorResponse(
             HttpStatus status, String error, String message, HttpServletRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
