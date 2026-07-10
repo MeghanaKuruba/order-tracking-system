@@ -19,6 +19,7 @@ public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long paymentId;
+    @Column(nullable = false, unique = true)
     private Long orderId;
     private Long customerId;
     private BigDecimal amount;
