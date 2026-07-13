@@ -2,9 +2,8 @@ package com.ordertracking.payment.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ordertracking.payment.dto.PaymentFailureEvent;
-import com.ordertracking.payment.dto.PaymentSuccessEvent;
 import com.ordertracking.payment.entity.Payment;
+import com.ordertracking.payment.dto.PaymentEvent;
 import com.ordertracking.payment.entity.PaymentMethod;
 import com.ordertracking.payment.entity.PaymentStatus;
 import com.ordertracking.payment.exception.PaymentNotFoundException;
@@ -106,14 +105,16 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
         log.info("Payment {} marked SUCCESS", payment.getPaymentId());
 
-        PaymentSuccessEvent event = new PaymentSuccessEvent(
-                payment.getOrderId(),
-                payment.getPaymentId(),
-                payment.getTransactionId(),
-                payment.getPaymentMethod().name(),
-                payment.getStatus().name(),
-                payment.getAmount()
-        );
+        PaymentEvent event =
+                new PaymentEvent(
+                        payment.getOrderId(),
+                        payment.getPaymentId(),
+                        payment.getStatus().name(),
+                        payment.getAmount(),
+                        payment.getTransactionId(),
+                        payment.getPaymentMethod().name(),
+                        null
+                );
 
         log.info(
                 "Publishing PaymentSuccessEvent for Order {}",
@@ -123,7 +124,7 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         outboxService.saveEvent(
                 "PAYMENT",
                 payment.getPaymentId(),
-                "PAYMENT_SUCCESS",
+                "PAYMENT_EVENT",
                 event
         );
 
@@ -192,13 +193,16 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
         log.info("Payment {} marked FAILED", payment.getPaymentId());
 
-        PaymentFailureEvent event = new PaymentFailureEvent(
-                payment.getOrderId(),
-                payment.getPaymentId(),
-                payment.getStatus().name(),
-                payment.getFailureReason(),
-                payment.getAmount()
-        );
+        PaymentEvent event =
+                new PaymentEvent(
+                        payment.getOrderId(),
+                        payment.getPaymentId(),
+                        payment.getStatus().name(),
+                        payment.getAmount(),
+                        payment.getTransactionId(),
+                        payment.getPaymentMethod().name(),
+                        null
+                );
 
         log.info(
                 "Publishing PaymentFailureEvent for Order {}",
@@ -208,7 +212,7 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         outboxService.saveEvent(
                 "PAYMENT",
                 payment.getPaymentId(),
-                "PAYMENT_FAILED",
+                "PAYMENT_EVENT",
                 event
         );
 

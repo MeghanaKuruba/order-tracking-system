@@ -2,9 +2,9 @@ package com.ordertracking.payment.service.impl;
 
 import com.ordertracking.payment.config.razorpay.RazorpayProperties;
 import com.ordertracking.payment.dto.PaymentCheckoutResponse;
-import com.ordertracking.payment.dto.PaymentSuccessEvent;
 import com.ordertracking.payment.dto.PaymentVerificationRequest;
 import com.ordertracking.payment.entity.Payment;
+import com.ordertracking.payment.dto.PaymentEvent;
 import com.ordertracking.payment.entity.PaymentMethod;
 import com.ordertracking.payment.entity.PaymentStatus;
 import com.ordertracking.payment.exception.*;
@@ -117,14 +117,16 @@ public class RazorpayServiceImpl implements RazorpayService {
 
             Payment savedPayment = paymentRepository.save(payment);
 
-            PaymentSuccessEvent event = new PaymentSuccessEvent(
-                    savedPayment.getOrderId(),
-                    savedPayment.getPaymentId(),
-                    savedPayment.getTransactionId(),
-                    savedPayment.getPaymentMethod().name(),
-                    savedPayment.getStatus().name(),
-                    savedPayment.getAmount()
-            );
+            PaymentEvent event =
+                    new PaymentEvent(
+                            payment.getOrderId(),
+                            payment.getPaymentId(),
+                            payment.getStatus().name(),
+                            payment.getAmount(),
+                            payment.getTransactionId(),
+                            payment.getPaymentMethod().name(),
+                            null
+                    );
 
             try { // In production usually companies use outbox pattern,
                 // Update payment->Insert event into OUTBOX table->
@@ -133,7 +135,7 @@ public class RazorpayServiceImpl implements RazorpayService {
                 outboxService.saveEvent(
                         "PAYMENT",
                         payment.getPaymentId(),
-                        "PAYMENT_SUCCESS",
+                        "PAYMENT_EVENT",
                         event
                 );
             }catch (Exception ex){

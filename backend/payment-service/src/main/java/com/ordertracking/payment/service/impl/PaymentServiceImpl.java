@@ -2,9 +2,9 @@ package com.ordertracking.payment.service.impl;
 
 import com.ordertracking.payment.config.razorpay.RazorpayProperties;
 import com.ordertracking.payment.dto.PaymentCheckoutResponse;
-import com.ordertracking.payment.dto.PaymentFailureEvent;
 import com.ordertracking.payment.dto.PaymentResponse;
 import com.ordertracking.payment.entity.Payment;
+import com.ordertracking.payment.dto.PaymentEvent;
 import com.ordertracking.payment.entity.PaymentStatus;
 import com.ordertracking.payment.exception.*;
 import com.ordertracking.payment.mapper.PaymentMapper;
@@ -77,18 +77,21 @@ public class PaymentServiceImpl implements PaymentService {
 
         // Publish failure event (safe)
         try {
-            PaymentFailureEvent event = new PaymentFailureEvent(
-                    savedPayment.getOrderId(),
-                    savedPayment.getPaymentId(),
-                    savedPayment.getStatus().name(),
-                    savedPayment.getFailureReason(),
-                    savedPayment.getAmount()
-            );
+            PaymentEvent event =
+                    new PaymentEvent(
+                            payment.getOrderId(),
+                            payment.getPaymentId(),
+                            payment.getStatus().name(),
+                            payment.getAmount(),
+                            payment.getTransactionId(),
+                            payment.getPaymentMethod().name(),
+                            null
+                    );
 
             outboxService.saveEvent(
                     "PAYMENT",
                     payment.getPaymentId(),
-                    "PAYMENT_FAILED",
+                    "PAYMENT_EVENT",
                     event
             );
 
