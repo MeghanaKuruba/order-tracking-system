@@ -20,6 +20,9 @@ public class PaymentExpiryScheduler {
     @Transactional
     @Scheduled(fixedRate = 10000)
     public void expirePendingPayments() {
+
+        log.info("PaymentExpiryScheduler running...");
+
         paymentExpiryService.expirePendingPayments();
     }
 }

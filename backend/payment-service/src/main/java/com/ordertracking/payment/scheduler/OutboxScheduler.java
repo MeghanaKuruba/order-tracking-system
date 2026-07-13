@@ -1,11 +1,9 @@
 package com.ordertracking.payment.scheduler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ordertracking.payment.dto.PaymentExpiredEvent;
-import com.ordertracking.payment.dto.PaymentFailureEvent;
-import com.ordertracking.payment.dto.PaymentSuccessEvent;
 import com.ordertracking.payment.entity.OutboxEvent;
 import com.ordertracking.payment.entity.OutboxStatus;
+import com.ordertracking.payment.dto.PaymentEvent;
 import com.ordertracking.payment.kafka.producer.PaymentEventProducer;
 import com.ordertracking.payment.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,44 +33,12 @@ public class OutboxScheduler {
 
             try {
 
-                switch (event.getEventType()) {
+                PaymentEvent paymentEvent =
+                        mapper.readValue(
+                                event.getPayload(),
+                                PaymentEvent.class);
 
-                    case "PAYMENT_SUCCESS":
-
-                        PaymentSuccessEvent success =
-                                mapper.readValue(
-                                        event.getPayload(),
-                                        PaymentSuccessEvent.class);
-
-                        producer.sendPaymentSuccessEvent(success);
-
-                        break;
-
-                    case "PAYMENT_FAILED":
-
-                        PaymentFailureEvent failure =
-                                mapper.readValue(
-                                        event.getPayload(),
-                                        PaymentFailureEvent.class);
-
-                        producer.sendPaymentFailureEvent(failure);
-
-                        break;
-
-                    case "PAYMENT_EXPIRED":
-
-                        PaymentExpiredEvent expiredEvent =
-                                mapper.readValue(
-                                        event.getPayload(),
-                                        PaymentExpiredEvent.class);
-
-                        producer.sendPaymentExpiredEvent(expiredEvent);
-
-                        break;
-
-                    default:
-                        log.warn("Unknown event type: {}", event.getEventType());
-                }
+                producer.sendPaymentEvent(paymentEvent);
 
                 event.setStatus(OutboxStatus.SENT);
                 event.setProcessedAt(LocalDateTime.now());

@@ -1,9 +1,7 @@
 package com.ordertracking.payment.kafka.producer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ordertracking.payment.dto.PaymentExpiredEvent;
-import com.ordertracking.payment.dto.PaymentFailureEvent;
-import com.ordertracking.payment.dto.PaymentSuccessEvent;
+import com.ordertracking.payment.dto.PaymentEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -18,38 +16,16 @@ public class PaymentEventProducer {
 
     private final ObjectMapper objectMapper;
 
-    public void sendPaymentSuccessEvent(PaymentSuccessEvent event) {
+    public void sendPaymentEvent(PaymentEvent event) {
+
         try {
-            log.info("Publishing payment success event for paymentId={}", event.getPaymentId());
+            log.info("Publishing payment event status={} for paymentId={}", event.getPaymentStatus(), event.getPaymentId());
 
             String jsonMessage = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send("payment-success", jsonMessage);
-        } catch (Exception e) {
-            throw new RuntimeException("Error publishing payment success event", e);
-        }
-    }
-
-    public void sendPaymentFailureEvent(PaymentFailureEvent event){
-        try {
-            log.info("Publishing payment failure event for paymentId={}", event.getPaymentId());
-
-            String jsonMessage = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send("payment-failed", jsonMessage);
+            kafkaTemplate.send("payment-event", jsonMessage);
 
         } catch (Exception e) {
-            throw new RuntimeException("Error publishing payment failure event", e);
-        }
-    }
-
-    public void sendPaymentExpiredEvent(PaymentExpiredEvent event){
-        try {
-            log.info("Publishing payment expired event for paymentId={}", event.getPaymentId());
-
-            String jsonMessage = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send("payment-expired", jsonMessage);
-
-        } catch (Exception e) {
-            throw new RuntimeException("Error publishing payment expired event", e);
+            throw new RuntimeException("Error publishing payment event", e);
         }
     }
 }

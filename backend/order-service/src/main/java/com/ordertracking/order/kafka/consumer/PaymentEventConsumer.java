@@ -1,10 +1,7 @@
 package com.ordertracking.order.kafka.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ordertracking.order.dto.OrderConfirmedEvent;
-import com.ordertracking.order.dto.PaymentExpiredEvent;
-import com.ordertracking.order.dto.PaymentFailureEvent;
-import com.ordertracking.order.dto.PaymentSuccessEvent;
+import com.ordertracking.order.dto.*;
 import com.ordertracking.order.entity.Order;
 import com.ordertracking.order.entity.OrderStatus;
 import com.ordertracking.order.exception.OrderNotFoundException;
@@ -26,77 +23,83 @@ public class PaymentEventConsumer {
     private final OrderConfirmedEventProducer orderConfirmedEventProducer;
     private final OrderService orderService;
 
-    @KafkaListener(topics = "payment-success", groupId = "order-group")
-    public void consumePaymentSuccess(String message) {
+    @KafkaListener(topics = "payment-event", groupId = "order-group")
+    public void consumePaymentEvent(String message) {
 
         try {
 
-            PaymentSuccessEvent event =
-                    objectMapper.readValue(message, PaymentSuccessEvent.class);
+            PaymentEvent event =
+                    objectMapper.readValue(message, PaymentEvent.class);
 
-            log.info("Received payment success event for paymentId={}", event.getPaymentId());
+            log.info(
+                    "Received payment event {} for paymentId={}",
+                    event.getPaymentStatus(),
+                    event.getPaymentId()
+            );
 
-            Order order = orderRepository.findById(event.getOrderId())
-                    .orElseThrow(() ->
-                            new OrderNotFoundException(
-                                    "Order not found with ID: " + event.getOrderId()));
+            switch (event.getPaymentStatus()) {
 
-            order.setStatus(OrderStatus.CONFIRMED);
+                case "SUCCESS":
 
-            Order savedOrder = orderRepository.save(order);
+                    Order order = orderRepository.findById(event.getOrderId())
+                            .orElseThrow(() ->
+                                    new OrderNotFoundException(
+                                            "Order not found with ID: " + event.getOrderId()));
 
-            OrderConfirmedEvent confirmedEvent =
-                    new OrderConfirmedEvent(
-                            savedOrder.getOrderId(),
-                            savedOrder.getRestaurantId(),
-                            savedOrder.getCustomerId(),
-                            savedOrder.getStatus().name(),
-                            savedOrder.getTotalAmount()
+                    order.setStatus(OrderStatus.CONFIRMED);
+
+                    Order savedOrder = orderRepository.save(order);
+
+                    OrderConfirmedEvent confirmedEvent =
+                            new OrderConfirmedEvent(
+                                    savedOrder.getOrderId(),
+                                    savedOrder.getRestaurantId(),
+                                    savedOrder.getCustomerId(),
+                                    savedOrder.getStatus().name(),
+                                    savedOrder.getTotalAmount()
+                            );
+
+                    orderConfirmedEventProducer.sendOrderConfirmedEvent(
+                            confirmedEvent
                     );
 
-            orderConfirmedEventProducer.sendOrderConfirmedEvent(confirmedEvent);
+                    log.info(
+                            "Order {} confirmed successfully",
+                            savedOrder.getOrderId()
+                    );
 
-            log.info("Order {} confirmed successfully", savedOrder.getOrderId());
+                    break;
 
-        } catch (Exception e) {
+                case "FAILED":
 
-            log.error("Error processing payment success event", e);
-        }
-    }
+                    orderService.updateOrderStatus(
+                            event.getOrderId(),
+                            "FAILED"
+                    );
 
-    @KafkaListener(topics = "payment-failed", groupId = "order-group")
-    public void consumePaymentFailure(String message) {
+                    break;
 
-        try {
+                case "EXPIRED":
 
-            PaymentFailureEvent event =
-                    objectMapper.readValue(message, PaymentFailureEvent.class);
+                    orderService.updateOrderStatus(
+                            event.getOrderId(),
+                            "EXPIRED"
+                    );
 
-            log.info("Received payment failure event for paymentId={}", event.getPaymentId());
+                    break;
 
-            orderService.updateOrderStatus(event.getOrderId(), "FAILED");
+                default:
 
-        } catch (Exception e) {
-
-            log.error("Error processing payment failure event", e);
-        }
-    }
-
-    @KafkaListener(topics = "payment-expired", groupId = "order-group")
-    public void consumePaymentExpired(String message) {
-
-        try {
-
-            PaymentExpiredEvent event =
-                    objectMapper.readValue(message, PaymentExpiredEvent.class);
-
-            log.info("Received payment expired event for paymentId={}", event.getPaymentId());
-
-            orderService.updateOrderStatus(event.getOrderId(), "EXPIRED");
+                    log.warn(
+                            "Unhandled payment status {}",
+                            event.getPaymentStatus()
+                    );
+            }
 
         } catch (Exception e) {
 
-            log.error("Error processing payment expired event", e);
+            log.error("Error processing payment event", e);
+
         }
     }
 }

@@ -1,7 +1,7 @@
 package com.ordertracking.payment.service.impl;
 
-import com.ordertracking.payment.dto.PaymentExpiredEvent;
 import com.ordertracking.payment.entity.Payment;
+import com.ordertracking.payment.dto.PaymentEvent;
 import com.ordertracking.payment.entity.PaymentStatus;
 import com.ordertracking.payment.repository.PaymentRepository;
 import com.ordertracking.payment.service.OutboxService;
@@ -26,11 +26,15 @@ public class PaymentExpiryServiceImpl implements PaymentExpiryService {
 
         LocalDateTime expiryTime = LocalDateTime.now().minusMinutes(1);
 
+        log.info("Searching payments older than {}", expiryTime);
+
         List<Payment> expiredPayments =
                 paymentRepository.findByStatusAndUpdatedAtBefore(
                         PaymentStatus.PENDING_PAYMENT,
                         expiryTime
                 );
+
+        log.info("Found {} expired payments", expiredPayments.size());
 
         for (Payment payment : expiredPayments) {
 
@@ -41,18 +45,23 @@ public class PaymentExpiryServiceImpl implements PaymentExpiryService {
 
             log.info("Payment {} expired", payment.getPaymentId());
 
-            PaymentExpiredEvent event =
-                    new PaymentExpiredEvent(
+            PaymentEvent event =
+                    new PaymentEvent(
                             payment.getOrderId(),
                             payment.getPaymentId(),
                             payment.getStatus().name(),
-                            payment.getAmount()
+                            payment.getAmount(),
+                            payment.getTransactionId(),
+                            payment.getPaymentMethod() != null
+                                    ? payment.getPaymentMethod().name()
+                                    : null,
+                            payment.getFailureReason()
                     );
 
             outboxService.saveEvent(
                     "PAYMENT",
                     payment.getPaymentId(),
-                    "PAYMENT_EXPIRED",
+                    "PAYMENT_EVENT",
                     event
             );
         }
