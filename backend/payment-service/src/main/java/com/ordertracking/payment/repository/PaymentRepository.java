@@ -18,4 +18,6 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findTopByOrderIdOrderByCreatedAtDesc(Long orderId);
 
     List<Payment> findByStatusAndUpdatedAtBefore(PaymentStatus status, LocalDateTime time);
+
+    List<Payment> findByStatusAndRazorpayOrderIdIsNullAndRazorpayRetryCountLessThanAndLastRetryAtBefore(PaymentStatus status, Integer retryCount, LocalDateTime retryTime);
 }

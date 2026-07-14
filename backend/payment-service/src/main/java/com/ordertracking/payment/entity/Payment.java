@@ -37,7 +37,15 @@ public class Payment {
     private String razorpayOrderId;
 
     private String failureReason;
+
+    @Column(nullable = false)
     private Integer attemptNumber;
+
+    @Column(nullable = false)
+    private Integer razorpayRetryCount = 0;
+
+    @Column
+    private LocalDateTime lastRetryAt;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
