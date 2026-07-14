@@ -1,5 +1,6 @@
 package com.ordertracking.payment.service.impl;
 
+import com.ordertracking.payment.config.PaymentExpiryProperties;
 import com.ordertracking.payment.entity.Payment;
 import com.ordertracking.payment.dto.PaymentEvent;
 import com.ordertracking.payment.entity.PaymentStatus;
@@ -22,9 +23,12 @@ public class PaymentExpiryServiceImpl implements PaymentExpiryService {
 
     private final OutboxService outboxService;
 
+    private final PaymentExpiryProperties paymentExpiryProperties;
+
     public void expirePendingPayments() {
 
-        LocalDateTime expiryTime = LocalDateTime.now().minusMinutes(1);
+        LocalDateTime expiryTime = LocalDateTime.now()
+                .minusMinutes(paymentExpiryProperties.getExpiryMinutes());
 
         log.info("Searching payments older than {}", expiryTime);
 

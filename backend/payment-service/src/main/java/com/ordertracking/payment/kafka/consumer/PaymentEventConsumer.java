@@ -32,17 +32,20 @@ public class PaymentEventConsumer {
     public void consume(String message) {
 
         OrderCreatedEvent event = null;
-        try{
+        Payment savedPayment = null;
+        try {
             event = objectMapper.readValue(message, OrderCreatedEvent.class);
             Payment payment = new Payment();
             payment.setOrderId(event.getOrderId());
             payment.setCustomerId(event.getCustomerId());
             payment.setAmount(event.getTotalAmount());
             payment.setAttemptNumber(1);
+            payment.setRazorpayRetryCount(0);
+            payment.setLastRetryAt(LocalDateTime.now());
             payment.setStatus(PaymentStatus.PENDING_PAYMENT);
             payment.setCreatedAt(LocalDateTime.now());
 
-            Payment savedPayment = paymentRepository.save(payment);
+            savedPayment = paymentRepository.save(payment);
 
             String razorpayOrderId = razorpayService.createRazorpayOrder(
                     savedPayment.getOrderId(),
@@ -55,19 +58,27 @@ public class PaymentEventConsumer {
 
             log.info("Payment created for order {}", event.getOrderId());
 
-        }
-        catch (DataIntegrityViolationException ex) {
+        } catch (DataIntegrityViolationException ex) {
 
             log.info(
                     "Duplicate Kafka event ignored. Payment already exists for orderId={}",
                     event.getOrderId()
             );
 
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
 
-            log.error("Failed to process order-created event", ex);
-
+            if (savedPayment != null) {
+                log.error(
+                        "Failed to create Razorpay Order for payment {}",
+                        savedPayment.getPaymentId(),
+                        ex
+                );
+            } else {
+                log.error(
+                        "Failed to process order-created event",
+                        ex
+                );
+            }
         }
     }
 }

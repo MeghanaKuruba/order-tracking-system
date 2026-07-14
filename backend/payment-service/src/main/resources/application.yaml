@@ -56,4 +56,10 @@ razorpay:
   webhook-secret: "YOUR_WEBHOOK_SECRET"
 
 payment:
-  max-attempts: 3
+  expiry:
+    max-attempts: 3
+    expiry-minutes: 1
+
+  razorpay-order:
+    max-attempts: 3
+    retry-interval-seconds: 30

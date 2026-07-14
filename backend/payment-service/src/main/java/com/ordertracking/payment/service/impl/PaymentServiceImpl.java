@@ -1,5 +1,6 @@
 package com.ordertracking.payment.service.impl;
 
+import com.ordertracking.payment.config.PaymentExpiryProperties;
 import com.ordertracking.payment.config.razorpay.RazorpayProperties;
 import com.ordertracking.payment.dto.PaymentCheckoutResponse;
 import com.ordertracking.payment.dto.PaymentResponse;
@@ -34,8 +35,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final OutboxService outboxService;
 
-    @Value("${payment.max-attempts}")
-    private int maxPaymentAttempts;
+    private final PaymentExpiryProperties expiryProperties;
 
     @Override
     public PaymentResponse getPaymentByOrderId(Long orderId) {
@@ -119,7 +119,7 @@ public class PaymentServiceImpl implements PaymentService {
             throw new PaymentAlreadyProcessedException("Payment already completed for order id : " + orderId);
         }
 
-        if (lastPayment.getAttemptNumber() >= maxPaymentAttempts){
+        if (lastPayment.getAttemptNumber() >= expiryProperties.getMaxAttempts()){
             lastPayment.setStatus(PaymentStatus.EXPIRED);
             paymentRepository.save(lastPayment);
             throw new PaymentRetryLimitExceededException("Maximum payment retry attempts exceeded for order is: " + orderId);
