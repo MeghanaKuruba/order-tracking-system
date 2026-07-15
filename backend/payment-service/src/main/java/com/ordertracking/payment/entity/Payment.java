@@ -39,10 +39,10 @@ public class Payment {
     private String failureReason;
 
     @Column(nullable = false)
-    private Integer attemptNumber;
+    private int attemptNumber;
 
     @Column(nullable = false)
-    private Integer razorpayRetryCount = 0;
+    private int razorpayRetryCount = 0;
 
     @Column
     private LocalDateTime lastRetryAt;

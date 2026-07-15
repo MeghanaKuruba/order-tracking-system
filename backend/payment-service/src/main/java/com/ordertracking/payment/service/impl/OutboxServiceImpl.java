@@ -31,8 +31,10 @@ public class OutboxServiceImpl implements OutboxService {
                     .aggregateId(aggregateId)
                     .eventType(eventType)
                     .payload(objectMapper.writeValueAsString(payload))
+                    .retryCount(0)
                     .status(OutboxStatus.PENDING)
                     .createdAt(LocalDateTime.now())
+                    .lastRetryAt(null)
                     .build();
 
             outboxEventRepository.save(event);
