@@ -63,3 +63,8 @@ payment:
   razorpay-order:
     max-attempts: 3
     retry-interval-seconds: 30
+
+outbox:
+  retry:
+    max-attempts: 3
+    retry-interval-seconds: 5

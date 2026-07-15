@@ -30,6 +30,11 @@ public class OutboxEvent {
     @Enumerated(EnumType.STRING)
     private OutboxStatus status;
 
+    @Column(nullable = false)
+    private int retryCount = 0;
+
+    private LocalDateTime lastRetryAt;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime processedAt;
