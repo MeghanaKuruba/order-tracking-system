@@ -15,4 +15,6 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long> 
             LocalDateTime retryTime,
             OutboxStatus status2
     );
+
+    List<OutboxEvent> findByStatus(OutboxStatus status);
 }
