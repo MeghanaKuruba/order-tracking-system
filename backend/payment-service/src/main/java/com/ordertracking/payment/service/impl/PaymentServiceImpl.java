@@ -3,18 +3,21 @@ package com.ordertracking.payment.service.impl;
 import com.ordertracking.payment.config.PaymentExpiryProperties;
 import com.ordertracking.payment.config.razorpay.RazorpayProperties;
 import com.ordertracking.payment.dto.PaymentCheckoutResponse;
-import com.ordertracking.payment.dto.PaymentResponse;
+import com.ordertracking.payment.dto.PaymentHistoryResponse;
 import com.ordertracking.payment.entity.Payment;
 import com.ordertracking.payment.dto.PaymentEvent;
 import com.ordertracking.payment.entity.PaymentStatus;
 import com.ordertracking.payment.exception.*;
-import com.ordertracking.payment.mapper.PaymentMapper;
 import com.ordertracking.payment.repository.PaymentRepository;
 import com.ordertracking.payment.service.OutboxService;
 import com.ordertracking.payment.service.PaymentService;
 import com.ordertracking.payment.service.RazorpayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,8 +30,6 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
 
-    private final PaymentMapper paymentMapper;
-
     private final RazorpayService razorpayService;
 
     private final RazorpayProperties razorpayProperties;
@@ -36,13 +37,6 @@ public class PaymentServiceImpl implements PaymentService {
     private final OutboxService outboxService;
 
     private final PaymentExpiryProperties expiryProperties;
-
-    @Override
-    public PaymentResponse getPaymentByOrderId(Long orderId) {
-        Payment payment = paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new PaymentNotFoundException("Payment not found for order ID: " + orderId));
-        return paymentMapper.mapToPaymentResponse(payment);
-    }
 
     @Override
     @Transactional
@@ -148,4 +142,72 @@ public class PaymentServiceImpl implements PaymentService {
                 .keyId(razorpayProperties.getKeyId())
                 .build();
     }
+
+    @Override
+    public PaymentHistoryResponse getPaymentHistoryByOrderId(Long orderId) {
+
+        Payment payment =
+                paymentRepository.findByOrderId(orderId)
+                        .orElseThrow(() ->
+                                new PaymentNotFoundException(
+                                        "Payment not found for Order " + orderId));
+
+        return map(payment);
+
+    }
+
+    @Override
+    public Page<PaymentHistoryResponse> getCustomerPaymentHistory(
+            Long customerId,
+            PaymentStatus status,
+            int page,
+            int size) {
+
+        Pageable pageable =
+                PageRequest.of(
+                        page,
+                        size,
+                        Sort.by("createdAt").descending()
+                );
+
+        Page<Payment> payments;
+
+        if (status == null) {
+
+            payments =
+                    paymentRepository.findByCustomerId(
+                            customerId,
+                            pageable);
+
+        } else {
+
+            payments =
+                    paymentRepository.findByCustomerIdAndStatus(
+                            customerId,
+                            status,
+                            pageable);
+
+        }
+
+        return payments.map(this::map);
+    }
+
+    private PaymentHistoryResponse map(Payment payment) {
+        return PaymentHistoryResponse.builder()
+                .paymentId(payment.getPaymentId())
+                .orderId(payment.getOrderId())
+                .amount(payment.getAmount())
+                .paymentMethod(payment.getPaymentMethod() != null
+                        ? payment.getPaymentMethod().name()
+                        : null)
+                .paymentStatus(payment.getStatus() != null
+                        ? payment.getStatus().name()
+                        : null)
+                .transactionId(payment.getTransactionId())
+                .failureReason(payment.getFailureReason())
+                .createdAt(payment.getCreatedAt())
+                .updatedAt(payment.getUpdatedAt())
+                .build();
+    }
+
 }
