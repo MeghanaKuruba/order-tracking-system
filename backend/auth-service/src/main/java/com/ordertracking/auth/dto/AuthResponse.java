@@ -1,5 +1,6 @@
 package com.ordertracking.auth.dto;
 
+import com.ordertracking.auth.entity.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -7,5 +8,5 @@ import lombok.Data;
 @AllArgsConstructor
 public class AuthResponse {
     private String token;
-    private String role;
+    private Role role;
 }
