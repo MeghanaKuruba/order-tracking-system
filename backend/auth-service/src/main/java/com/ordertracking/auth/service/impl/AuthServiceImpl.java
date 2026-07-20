@@ -3,6 +3,7 @@ package com.ordertracking.auth.service.impl;
 import com.ordertracking.auth.dto.AuthResponse;
 import com.ordertracking.auth.dto.LoginRequest;
 import com.ordertracking.auth.dto.RegisterRequest;
+import com.ordertracking.auth.entity.Role;
 import com.ordertracking.auth.entity.User;
 import com.ordertracking.auth.exception.DuplicateEmailException;
 import com.ordertracking.auth.exception.InvalidPasswordException;
@@ -39,7 +40,11 @@ public class AuthServiceImpl implements AuthService {
                 .name(request.getName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole() != null ? request.getRole() : "USER")
+                .role(
+                        request.getRole() != null
+                                ? request.getRole()
+                                : Role.CUSTOMER
+                )
                 .build();
 
         userRepository.save(user);

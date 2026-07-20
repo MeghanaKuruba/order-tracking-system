@@ -1,5 +1,6 @@
 package com.ordertracking.auth.dto;
 
+import com.ordertracking.auth.entity.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -21,5 +22,5 @@ public class RegisterRequest {
     )
     private String password;
 
-    private String role;
+    private Role role;
 }
