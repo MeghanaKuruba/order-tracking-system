@@ -36,6 +36,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/auth/login",
                                 "/auth/register",
+                                "/auth/refresh",
+                                "/auth/logout",
                                 "/h2-console/**"
                         ).permitAll()
 
