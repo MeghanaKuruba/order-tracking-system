@@ -1,8 +1,7 @@
 package com.ordertracking.auth.service.impl;
 
-import com.ordertracking.auth.dto.AuthResponse;
-import com.ordertracking.auth.dto.LoginRequest;
-import com.ordertracking.auth.dto.RegisterRequest;
+import com.ordertracking.auth.dto.*;
+import com.ordertracking.auth.entity.RefreshToken;
 import com.ordertracking.auth.entity.Role;
 import com.ordertracking.auth.entity.User;
 import com.ordertracking.auth.exception.DuplicateEmailException;
@@ -14,6 +13,7 @@ import com.ordertracking.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +22,8 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
 
     private final UserRepository userRepository;
+
+    private final RefreshTokenServiceImpl refreshTokenService;
 
     private final JwtUtil jwtUtil;
 
@@ -67,10 +69,62 @@ public class AuthServiceImpl implements AuthService {
                 throw new InvalidPasswordException("Invalid password");
             }
 
-            String token= jwtUtil.generateToken(user.getEmail(), user.getRole());
+        String accessToken =
+                jwtUtil.generateAccessToken(
+                        user.getEmail(),
+                        user.getRole()
+                );
 
-        return new AuthResponse(token, user.getRole());
+        RefreshToken refreshToken =
+                refreshTokenService.issueRefreshToken(user);
+
+        return AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken.getToken())
+                .role(user.getRole())
+                .build();
     }
 
+    /**
+     * Refresh JWT token using refresh token. Validates the refresh token, rotates it, and generates a new access token. Throws exception if refresh token is invalid or expired.
+     * @param request
+     * @return
+     */
+    @Override
+    @Transactional
+    public RefreshTokenResponse refreshToken(
+            RefreshTokenRequest request
+    ) {
 
+        RefreshToken refreshToken =
+                refreshTokenService.verifyRefreshToken(
+                        request.getRefreshToken()
+                );
+
+        User user = refreshToken.getUser();
+
+        String accessToken =
+                jwtUtil.generateAccessToken(
+                        user.getEmail(),
+                        user.getRole()
+                );
+
+        RefreshToken updatedRefreshToken =
+                refreshTokenService.issueRefreshToken(user);
+
+        return RefreshTokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(updatedRefreshToken.getToken())
+                .build();
+    }
+
+    /**
+     * Logout user by revoking the refresh token. Validates the refresh token and revokes it. Throws exception if refresh token is invalid or not found.
+     * @param refreshToken
+     */
+    @Override
+    @Transactional
+    public void logout(String refreshToken) {
+        refreshTokenService.revokeRefreshToken(refreshToken);
+    }
 }
