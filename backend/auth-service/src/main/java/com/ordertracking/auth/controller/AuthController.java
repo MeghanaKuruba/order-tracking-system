@@ -19,14 +19,36 @@ public class AuthController {
     private final AuthService authService;
 
     /**
-     * Register a new user. Validates the registration request, checks for duplicate email, encodes the password, and saves the user to the database. Throws exception if email already exists.
+     * Register a new customer. Validates the registration request, checks for duplicate email, encodes the password, and saves the user to the database. Throws exception if email already exists.
      * @param request
      * @return
      */
-    @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
-        String response = authService.register(request);
-        return ResponseEntity.ok(response);
+    @PostMapping("/customer/register")
+    public ResponseEntity<String> registerCustomer(@RequestBody RegisterRequest request) {
+
+        return ResponseEntity.ok(authService.registerCustomer(request));
+    }
+
+    /**
+     * Register a new restaurant Owner. Validates the registration request, checks for duplicate email, encodes the password, and saves the user to the database. Throws exception if email already exists.
+     * @param request
+     * @return
+     */
+    @PostMapping("/restaurant/register")
+    public ResponseEntity<String> registerRestaurant(@RequestBody RegisterRequest request) {
+
+        return ResponseEntity.ok(authService.registerRestaurant(request));
+    }
+
+    /**
+     * Register a new delivery partner. Validates the registration request, checks for duplicate email, encodes the password, and saves the user to the database. Throws exception if email already exists.
+     * @param request
+     * @return
+     */
+    @PostMapping("/delivery/register")
+    public ResponseEntity<String> registerDeliveryPartner(@RequestBody RegisterRequest request) {
+
+        return ResponseEntity.ok(authService.registerDeliveryPartner(request));
     }
 
     /**

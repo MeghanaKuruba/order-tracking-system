@@ -35,7 +35,9 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 "/auth/login",
-                                "/auth/register",
+                                "/auth/customer/register",
+                                "/auth/restaurant/register",
+                                "/auth/delivery/register",
                                 "/auth/refresh",
                                 "/auth/logout",
                                 "/h2-console/**"

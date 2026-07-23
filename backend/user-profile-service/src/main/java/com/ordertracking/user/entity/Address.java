@@ -3,8 +3,6 @@ package com.ordertracking.user.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import com.ordertracking.userprofile.entity.UserProfile;
-
 import java.time.LocalDateTime;
 
 @Entity
