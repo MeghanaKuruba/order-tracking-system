@@ -7,6 +7,7 @@ import com.ordertracking.auth.entity.User;
 import com.ordertracking.auth.exception.DuplicateEmailException;
 import com.ordertracking.auth.exception.InvalidPasswordException;
 import com.ordertracking.auth.exception.UserNotFoundException;
+import com.ordertracking.auth.kafka.producer.UserCreatedProducer;
 import com.ordertracking.auth.repository.UserRepository;
 import com.ordertracking.auth.security.JwtUtil;
 import com.ordertracking.auth.service.AuthService;
@@ -27,29 +28,71 @@ public class AuthServiceImpl implements AuthService {
 
     private final JwtUtil jwtUtil;
 
+    private final UserCreatedProducer userCreatedProducer;
+
+    /**
+     * Register a new customer. Validates the registration request, checks for duplicate email, encodes the password, and saves the user to the database. Throws exception if email already exists.
+     * @param request
+     * @return
+     */
+    @Override
+    public String registerCustomer(RegisterRequest request) {
+
+        return register(request, Role.CUSTOMER);
+    }
+
+    /**
+     * Register a new restaurant owner. Validates the registration request, checks for duplicate email, encodes the password, and saves the user to the database. Throws exception if email already exists.
+     * @param request
+     * @return
+     */
+    @Override
+    public String registerRestaurant(RegisterRequest request) {
+
+        return register(request, Role.RESTAURANT_OWNER);
+    }
+
+    /**
+     * Register a new delivery partner. Validates the registration request, checks for duplicate email, encodes the password, and saves the user to the database. Throws exception if email already exists.
+     * @param request
+     * @return
+     */
+    @Override
+    public String registerDeliveryPartner(RegisterRequest request) {
+
+        return register(request, Role.DELIVERY_PARTNER);
+    }
     /**
      * Register a new user. Validates the registration request, checks for duplicate email, encodes the password, and saves the user to the database. Throws exception if email already exists.
      * @param request
      * @return
      */
     @Override
-    public String register(RegisterRequest request) {
+    public String register(RegisterRequest request, Role role) {
         if(userRepository.existsByEmail(request.getEmail())) {
             throw new DuplicateEmailException("Email already exists: "+ request.getEmail());
         }
 
         User user = User.builder()
-                .name(request.getName())
+                .name(request.getFullName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(
-                        request.getRole() != null
-                                ? request.getRole()
-                                : Role.CUSTOMER
-                )
+                .phoneNumber(request.getPhoneNumber())
+                .role(role)
                 .build();
 
         userRepository.save(user);
+
+        UserCreatedEvent event =
+                UserCreatedEvent.builder()
+                        .authUserId(user.getId())
+                        .fullName(user.getName())
+                        .email(user.getEmail())
+                        .phoneNumber(user.getPhoneNumber())
+                        .role(user.getRole().name())
+                        .build();
+
+        userCreatedProducer.publish(event);
 
         return "User registered successfully";
     }

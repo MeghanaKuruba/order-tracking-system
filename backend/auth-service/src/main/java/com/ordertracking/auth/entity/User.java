@@ -23,6 +23,9 @@ public class User {
 
     private String password;
 
+    @Column(nullable = false)
+    private String phoneNumber;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @NotNull(message = "Role is required")

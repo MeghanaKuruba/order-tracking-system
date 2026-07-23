@@ -1,7 +1,5 @@
-package com.ordertracking.userprofile.entity;
+package com.ordertracking.user.entity;
 
-import com.ordertracking.user.entity.Address;
-import com.ordertracking.user.entity.Gender;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -34,6 +32,8 @@ public class UserProfile {
 
     @Column(nullable = false)
     private String phoneNumber;
+
+    private String role;
 
     private String profileImageUrl;
 
