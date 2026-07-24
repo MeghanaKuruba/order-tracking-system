@@ -1,6 +1,9 @@
 package com.ordertracking.user.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -25,6 +28,8 @@ public class UserProfile {
     private Long authUserId;
 
     @Column(nullable = false)
+    @NotBlank
+    @Size(min = 3, max = 100)
     private String fullName;
 
     @Column(nullable = false)
@@ -33,13 +38,15 @@ public class UserProfile {
     @Column(nullable = false)
     private String phoneNumber;
 
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     private String profileImageUrl;
 
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
+    @Past
     private LocalDate dateOfBirth;
 
     @Builder.Default

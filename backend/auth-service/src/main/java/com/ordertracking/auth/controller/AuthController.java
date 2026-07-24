@@ -35,7 +35,7 @@ public class AuthController {
      * @return
      */
     @PostMapping("/restaurant/register")
-    public ResponseEntity<String> registerRestaurant(@RequestBody RegisterRequest request) {
+    public ResponseEntity<String> registerRestaurant(@Valid @RequestBody RegisterRequest request) {
 
         return ResponseEntity.ok(authService.registerRestaurant(request));
     }
@@ -46,7 +46,7 @@ public class AuthController {
      * @return
      */
     @PostMapping("/delivery/register")
-    public ResponseEntity<String> registerDeliveryPartner(@RequestBody RegisterRequest request) {
+    public ResponseEntity<String> registerDeliveryPartner(@Valid @RequestBody RegisterRequest request) {
 
         return ResponseEntity.ok(authService.registerDeliveryPartner(request));
     }
@@ -89,7 +89,7 @@ public class AuthController {
      * @return
      */
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(@RequestBody LogoutRequest request) {
+    public ResponseEntity<String> logout(@Valid @RequestBody LogoutRequest request) {
         authService.logout(request.getRefreshToken());
         return ResponseEntity.ok("Logged out successfully");
     }
