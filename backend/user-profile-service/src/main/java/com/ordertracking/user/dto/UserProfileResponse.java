@@ -4,6 +4,7 @@ import com.ordertracking.user.entity.Gender;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -26,6 +27,8 @@ public class UserProfileResponse {
     private LocalDate dateOfBirth;
 
     private String profileImageUrl;
+
+    private LocalDateTime updatedAt;
 
     private List<AddressResponse> addresses;
 }

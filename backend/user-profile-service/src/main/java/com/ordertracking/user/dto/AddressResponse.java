@@ -1,9 +1,6 @@
 package com.ordertracking.user.dto;
 
 import com.ordertracking.user.entity.UserProfile;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -23,7 +20,7 @@ public class AddressResponse {
 
     private String recipientPhone;
 
-    private String doorNo;
+    private String doorNoOrBuildingName;
 
     private String street;
 
@@ -42,8 +39,6 @@ public class AddressResponse {
     private Double longitude;
 
     private Boolean isDefault = false;
-
-    private UserProfile userProfile;
 
     private LocalDateTime createdAt;
 
