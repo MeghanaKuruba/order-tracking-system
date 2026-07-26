@@ -32,6 +32,24 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Validation Failed", message, request);
     }
 
+    @ExceptionHandler(DuplicateAddressException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateAddressException(
+            DuplicateAddressException ex, HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.CONFLICT, "Duplicate Address", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(AddressNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleAddressNotFoundException(
+            AddressNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, "Address Not Found", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InvalidAddressException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidAddressException(
+            InvalidAddressException ex, HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Cannot delete your only address.", ex.getMessage(), request);
+    }
+
     @ExceptionHandler(UserProfileNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserProfileNotFoundException(
             UserProfileNotFoundException ex, HttpServletRequest request) {

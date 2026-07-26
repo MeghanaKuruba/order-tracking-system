@@ -24,7 +24,7 @@ public class Address {
 
     private String recipientPhone;
 
-    private String doorNo;
+    private String doorNoOrBuildingName;
 
     private String street;
 
