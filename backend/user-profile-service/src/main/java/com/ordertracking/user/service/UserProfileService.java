@@ -23,4 +23,6 @@ public interface UserProfileService {
     void deleteAddress(Long authUserId, Long addressId);
 
     AddressResponse setDefaultAddress(Long authUserId, Long addressId);
+
+    AddressResponse getAddressById(Long authUserId, Long addressId);
 }

@@ -63,4 +63,12 @@ public class UserProfileController {
 
         return ResponseEntity.ok(service.setDefaultAddress(authUserId, addressId));
     }
+
+    @GetMapping("/profile/addresses/{addressId}")
+    public AddressResponse getAddressById(
+            @RequestHeader("X-Auth-UserId") Long authUserId,
+            @PathVariable Long addressId){
+
+        return service.getAddressById(authUserId, addressId);
+    }
 }

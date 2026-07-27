@@ -281,6 +281,19 @@ public class UserProfileServiceImpl implements UserProfileService {
         return addressMapper(updated);
     }
 
+    @Override
+    public AddressResponse getAddressById(Long authUserId, Long addressId) {
+
+        Address address =
+                addressRepository
+                        .findByIdAndUserProfileAuthUserId(addressId, authUserId)
+                        .orElseThrow(() ->
+                                new AddressNotFoundException("Address not found."));
+
+        return addressMapper(address);
+
+    }
+
     private AddressResponse addressMapper(Address address) {
 
         return AddressResponse.builder()
