@@ -229,15 +229,7 @@ public class UserProfileServiceImpl implements UserProfileService {
                         .findByIdAndUserProfileAuthUserId(addressId, authUserId)
                         .orElseThrow(() -> new AddressNotFoundException("Address not found."));
 
-        List<Address> addresses =
-                addressRepository.findByUserProfileAuthUserIdOrderByCreatedAtAsc(authUserId);
-
-        if(addresses.size() == 1){
-            throw new InvalidAddressException("Cannot delete your only address.");
-        }
-
-        boolean wasDefault =
-                Boolean.TRUE.equals(address.getIsDefault());
+        boolean wasDefault = Boolean.TRUE.equals(address.getIsDefault());
 
         addressRepository.delete(address);
 
