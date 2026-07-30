@@ -40,6 +40,8 @@ spring:
     pattern:
       console: "%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n"
 
+osm:
+  base-url: https://nominatim.openstreetmap.org/search
 
 management:
   endpoints:

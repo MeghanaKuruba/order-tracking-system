@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidAddressException.class)
     public ResponseEntity<ErrorResponse> handleInvalidAddressException(
             InvalidAddressException ex, HttpServletRequest request) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Cannot delete your only address.", ex.getMessage(), request);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid Address", ex.getMessage(), request);
     }
 
     @ExceptionHandler(UserProfileNotFoundException.class)
