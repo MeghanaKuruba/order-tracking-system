@@ -224,15 +224,7 @@ public class UserProfileServiceImpl implements UserProfileService {
                         .findByIdAndUserProfileAuthUserId(addressId, authUserId)
                         .orElseThrow(() -> new AddressNotFoundException("Address not found."));
 
-        List<Address> addresses =
-                addressRepository.findByUserProfileAuthUserIdOrderByCreatedAtAsc(authUserId);
-
-        if(addresses.size() == 1){
-            throw new InvalidAddressException("Cannot delete your only address.");
-        }
-
-        boolean wasDefault =
-                Boolean.TRUE.equals(address.getIsDefault());
+        boolean wasDefault = Boolean.TRUE.equals(address.getIsDefault());
 
         addressRepository.delete(address);
 
@@ -262,12 +254,10 @@ public class UserProfileServiceImpl implements UserProfileService {
         for (Address addr : addresses) {
             if (Boolean.TRUE.equals(addr.getIsDefault())) {
                 addr.setIsDefault(false);
-                addr.setUpdatedAt(LocalDateTime.now());
             }
         }
 
         address.setIsDefault(true);
-        address.setUpdatedAt(LocalDateTime.now());
 
         addressRepository.saveAll(addresses);
 
@@ -275,4 +265,18 @@ public class UserProfileServiceImpl implements UserProfileService {
 
         return userProfileMapper.toAddressResponse(updated);
     }
+
+    @Override
+    public AddressResponse getAddressById(Long authUserId, Long addressId) {
+
+        Address address =
+                addressRepository
+                        .findByIdAndUserProfileAuthUserId(addressId, authUserId)
+                        .orElseThrow(() ->
+                                new AddressNotFoundException("Address not found."));
+
+        return userProfileMapper.toAddressResponse(address);
+
+    }
+
 }
