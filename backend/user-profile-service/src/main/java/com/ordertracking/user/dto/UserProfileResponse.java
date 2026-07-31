@@ -30,5 +30,7 @@ public class UserProfileResponse {
 
     private LocalDateTime updatedAt;
 
+    private LocalDateTime createdAt;
+
     private List<AddressResponse> addresses;
 }

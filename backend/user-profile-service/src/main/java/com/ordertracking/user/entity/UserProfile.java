@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -12,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "user_profiles")
 @Getter
 @Setter
@@ -58,7 +62,11 @@ public class UserProfile {
     )
     private List<Address> addresses = new ArrayList<>();
 
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 }
