@@ -5,6 +5,7 @@ import com.ordertracking.user.entity.Address;
 import com.ordertracking.user.entity.Role;
 import com.ordertracking.user.entity.UserProfile;
 import com.ordertracking.user.exception.*;
+import com.ordertracking.user.mapper.UserProfileMapper;
 import com.ordertracking.user.repository.AddressRepository;
 import com.ordertracking.user.repository.UserProfileRepository;
 import com.ordertracking.user.service.UserProfileService;
@@ -15,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +27,8 @@ public class UserProfileServiceImpl implements UserProfileService {
     private final UserProfileRepository userProfileRepository;
 
     private final AddressRepository addressRepository;
+
+    private final UserProfileMapper userProfileMapper;
 
     public void createProfile(UserCreatedEvent event) {
         // Check if the user profile already exists
@@ -42,7 +44,6 @@ public class UserProfileServiceImpl implements UserProfileService {
                 .email(event.getEmail())
                 .phoneNumber(event.getPhoneNumber())
                 .role(Role.valueOf(event.getRole()))
-                .createdAt(LocalDateTime.now())
                 .build();
 
         // Save the new user profile to the database
@@ -59,7 +60,7 @@ public class UserProfileServiceImpl implements UserProfileService {
                         .orElseThrow(() ->
                                 new UserProfileNotFoundException("Profile not found"));
 
-        return map(profile);
+        return userProfileMapper.toUserProfileResponse(profile);
     }
 
     @Override
@@ -100,9 +101,7 @@ public class UserProfileServiceImpl implements UserProfileService {
         if (request.getProfileImageUrl() != null)
             profile.setProfileImageUrl(request.getProfileImageUrl());
 
-        profile.setUpdatedAt(LocalDateTime.now());
-
-        return map(userProfileRepository.save(profile));
+        return userProfileMapper.toUserProfileResponse(userProfileRepository.save(profile));
     }
 
     @Override
@@ -149,8 +148,6 @@ public class UserProfileServiceImpl implements UserProfileService {
                         .latitude(request.getLatitude())
                         .longitude(request.getLongitude())
                         .userProfile(profile)
-                        .createdAt(LocalDateTime.now())
-                        .updatedAt(LocalDateTime.now())
                         .build();
 
         if(profile.getAddresses().isEmpty()){
@@ -161,7 +158,7 @@ public class UserProfileServiceImpl implements UserProfileService {
 
         userProfileRepository.save(profile);
 
-        return map(profile);
+        return userProfileMapper.toUserProfileResponse(profile);
     }
 
     @Override
@@ -170,7 +167,7 @@ public class UserProfileServiceImpl implements UserProfileService {
         return addressRepository
                 .findByUserProfileAuthUserIdOrderByCreatedAtAsc(authUserId)
                 .stream()
-                .map(this::addressMapper)
+                .map(userProfileMapper::toAddressResponse)
                 .toList();
 
     }
@@ -214,11 +211,9 @@ public class UserProfileServiceImpl implements UserProfileService {
         address.setLatitude(request.getLatitude());
         address.setLongitude(request.getLongitude());
 
-        address.setUpdatedAt(LocalDateTime.now());
-
         addressRepository.save(address);
 
-        return addressMapper(address);
+        return userProfileMapper.toAddressResponse(address);
     }
 
     @Override
@@ -259,18 +254,16 @@ public class UserProfileServiceImpl implements UserProfileService {
         for (Address addr : addresses) {
             if (Boolean.TRUE.equals(addr.getIsDefault())) {
                 addr.setIsDefault(false);
-                addr.setUpdatedAt(LocalDateTime.now());
             }
         }
 
         address.setIsDefault(true);
-        address.setUpdatedAt(LocalDateTime.now());
 
         addressRepository.saveAll(addresses);
 
         Address updated = addressRepository.save(address);
 
-        return addressMapper(updated);
+        return userProfileMapper.toAddressResponse(updated);
     }
 
     @Override
@@ -282,49 +275,8 @@ public class UserProfileServiceImpl implements UserProfileService {
                         .orElseThrow(() ->
                                 new AddressNotFoundException("Address not found."));
 
-        return addressMapper(address);
+        return userProfileMapper.toAddressResponse(address);
 
-    }
-
-    private AddressResponse addressMapper(Address address) {
-
-        return AddressResponse.builder()
-                .id(address.getId())
-                .label(address.getLabel())
-                .recipientName(address.getRecipientName())
-                .recipientPhone(address.getRecipientPhone())
-                .doorNoOrBuildingName(address.getDoorNoOrBuildingName())
-                .street(address.getStreet())
-                .landmark(address.getLandmark())
-                .city(address.getCity())
-                .state(address.getState())
-                .country(address.getCountry())
-                .postalCode(address.getPostalCode())
-                .latitude(address.getLatitude())
-                .longitude(address.getLongitude())
-                .isDefault(address.getIsDefault())
-                .createdAt(address.getCreatedAt())
-                .updatedAt(address.getUpdatedAt())
-                .build();
-    }
-
-    private UserProfileResponse map(UserProfile profile) {
-
-        return UserProfileResponse.builder()
-                .authUserId(profile.getAuthUserId())
-                .fullName(profile.getFullName())
-                .email(profile.getEmail())
-                .phoneNumber(profile.getPhoneNumber())
-                .gender(profile.getGender())
-                .dateOfBirth(profile.getDateOfBirth())
-                .profileImageUrl(profile.getProfileImageUrl())
-                .updatedAt(profile.getUpdatedAt())
-                .addresses(
-                        profile.getAddresses()
-                                .stream()
-                                .map(this::addressMapper)
-                                .toList())
-                .build();
     }
 
 }
