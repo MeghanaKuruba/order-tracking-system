@@ -1,15 +1,10 @@
 package com.ordertracking.user.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.Data;
 
-@Builder
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class AddressValidationResponse {
-
-    private boolean valid;
+public class GeoapifyProperties {
 
     private String city;
 
@@ -17,11 +12,11 @@ public class AddressValidationResponse {
 
     private String country;
 
-    private String postalCode;
+    private String postcode;
 
-    private Double latitude;
+    private Double lat;
 
-    private Double longitude;
+    private Double lon;
 
     @JsonProperty("formatted")
     private String displayName;
