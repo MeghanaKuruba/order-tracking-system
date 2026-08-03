@@ -42,8 +42,4 @@ public class AddAddressRequest {
 
     @NotBlank(message = "Postal code is required")
     private String postalCode;
-
-    private Double latitude;
-
-    private Double longitude;
 }

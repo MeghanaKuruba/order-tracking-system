@@ -1,7 +1,6 @@
 package com.ordertracking.user.mapper;
 
-import com.ordertracking.user.dto.AddressResponse;
-import com.ordertracking.user.dto.UserProfileResponse;
+import com.ordertracking.user.dto.*;
 import com.ordertracking.user.entity.Address;
 import com.ordertracking.user.entity.UserProfile;
 import org.springframework.stereotype.Component;
@@ -42,6 +41,7 @@ public class UserProfileMapper {
                 .dateOfBirth(profile.getDateOfBirth())
                 .profileImageUrl(profile.getProfileImageUrl())
                 .updatedAt(profile.getUpdatedAt())
+                .createdAt(profile.getCreatedAt())
                 .addresses(
                         profile.getAddresses()
                                 .stream()
@@ -49,6 +49,78 @@ public class UserProfileMapper {
                                 .toList()
                 )
                 .build();
+    }
+
+    public AddressValidationRequest toAddressValidationRequest(AddAddressRequest request) {
+
+        return AddressValidationRequest.builder()
+                .doorNoOrBuildingName(request.getDoorNoOrBuildingName())
+                .street(request.getStreet())
+                .city(request.getCity())
+                .state(request.getState())
+                .country(request.getCountry())
+                .postalCode(request.getPostalCode())
+                .build();
+
+    }
+
+    public AddressValidationRequest toAddressValidationRequest(UpdateAddressRequest request) {
+
+        return AddressValidationRequest.builder()
+                .doorNoOrBuildingName(request.getDoorNoOrBuildingName())
+                .street(request.getStreet())
+                .city(request.getCity())
+                .state(request.getState())
+                .country(request.getCountry())
+                .postalCode(request.getPostalCode())
+                .build();
+
+    }
+
+    public Address toAddress(
+            AddAddressRequest request,
+            UserProfile profile,
+            AddressValidationResponse validation
+    ) {
+
+        return Address.builder()
+                .label(request.getLabel())
+                .recipientName(request.getRecipientName())
+                .recipientPhone(request.getRecipientPhone())
+                .doorNoOrBuildingName(request.getDoorNoOrBuildingName())
+                .street(request.getStreet())
+                .landmark(request.getLandmark())
+                .city(validation.getCity())
+                .state(validation.getState())
+                .country(validation.getCountry())
+                .postalCode(validation.getPostalCode())
+                .latitude(validation.getLatitude())
+                .longitude(validation.getLongitude())
+                .userProfile(profile)
+                .build();
+    }
+
+    public void updateAddress(
+            Address address,
+            UpdateAddressRequest request,
+            AddressValidationResponse validation
+    ) {
+
+        address.setLabel(request.getLabel());
+        address.setRecipientName(request.getRecipientName());
+        address.setRecipientPhone(request.getRecipientPhone());
+        address.setDoorNoOrBuildingName(request.getDoorNoOrBuildingName());
+        address.setStreet(request.getStreet());
+        address.setLandmark(request.getLandmark());
+
+        address.setCity(validation.getCity());
+        address.setState(validation.getState());
+        address.setCountry(validation.getCountry());
+        address.setPostalCode(validation.getPostalCode());
+
+        address.setLatitude(validation.getLatitude());
+        address.setLongitude(validation.getLongitude());
+
     }
 
 }

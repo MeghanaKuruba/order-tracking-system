@@ -9,6 +9,7 @@ import com.ordertracking.user.mapper.UserProfileMapper;
 import com.ordertracking.user.repository.AddressRepository;
 import com.ordertracking.user.repository.UserProfileRepository;
 import com.ordertracking.user.service.UserProfileService;
+import com.ordertracking.user.service.location.LocationValidationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,8 @@ public class UserProfileServiceImpl implements UserProfileService {
     private final AddressRepository addressRepository;
 
     private final UserProfileMapper userProfileMapper;
+
+    private final LocationValidationService locationValidationService;
 
     public void createProfile(UserCreatedEvent event) {
         // Check if the user profile already exists
@@ -133,22 +136,40 @@ public class UserProfileServiceImpl implements UserProfileService {
             );
         }
 
-        Address address =
-                Address.builder()
-                        .label(request.getLabel())
-                        .recipientName(request.getRecipientName())
-                        .recipientPhone(request.getRecipientPhone())
-                        .doorNoOrBuildingName(request.getDoorNoOrBuildingName())
-                        .street(request.getStreet())
-                        .landmark(request.getLandmark())
-                        .city(request.getCity())
-                        .state(request.getState())
-                        .country(request.getCountry())
-                        .postalCode(request.getPostalCode())
-                        .latitude(request.getLatitude())
-                        .longitude(request.getLongitude())
-                        .userProfile(profile)
-                        .build();
+        AddressValidationResponse validation = locationValidationService.validate(
+                        userProfileMapper.toAddressValidationRequest(request));
+
+        log.info("========== USER INPUT ==========");
+        log.info("City      : {}", request.getCity());
+        log.info("State     : {}", request.getState());
+        log.info("Country   : {}", request.getCountry());
+        log.info("Postal    : {}", request.getPostalCode());
+
+        log.info("========== GEOAPIFY RESPONSE ==========");
+        log.info("City      : {}", validation.getCity());
+        log.info("State     : {}", validation.getState());
+        log.info("Country   : {}", validation.getCountry());
+        log.info("Postal    : {}", validation.getPostalCode());
+        log.info("Latitude  : {}", validation.getLatitude());
+        log.info("Longitude : {}", validation.getLongitude());
+        log.info("Display   : {}", validation.getDisplayName());
+        if (!validation.getCity().equalsIgnoreCase(request.getCity())) {
+            throw new InvalidAddressException("City does not match validated address.");
+        }
+
+        if (!validation.getState().equalsIgnoreCase(request.getState())) {
+            throw new InvalidAddressException("State does not match validated address.");
+        }
+
+        if (!validation.getCountry().equalsIgnoreCase(request.getCountry())) {
+            throw new InvalidAddressException("Country does not match validated address.");
+        }
+
+        if (!validation.getPostalCode().equalsIgnoreCase(request.getPostalCode())) {
+            throw new InvalidAddressException("Postal code does not match validated address.");
+        }
+
+        Address address = userProfileMapper.toAddress(request, profile, validation);
 
         if(profile.getAddresses().isEmpty()){
             address.setIsDefault(true);
@@ -198,18 +219,41 @@ public class UserProfileServiceImpl implements UserProfileService {
             throw new DuplicateAddressException("Address already exists.");
         }
 
-        address.setLabel(request.getLabel());
-        address.setRecipientName(request.getRecipientName());
-        address.setRecipientPhone(request.getRecipientPhone());
-        address.setDoorNoOrBuildingName(request.getDoorNoOrBuildingName());
-        address.setStreet(request.getStreet());
-        address.setLandmark(request.getLandmark());
-        address.setCity(request.getCity());
-        address.setState(request.getState());
-        address.setCountry(request.getCountry());
-        address.setPostalCode(request.getPostalCode());
-        address.setLatitude(request.getLatitude());
-        address.setLongitude(request.getLongitude());
+        AddressValidationResponse validation = locationValidationService.validate(
+                        userProfileMapper.toAddressValidationRequest(request));
+
+        log.info("========== USER INPUT ==========");
+        log.info("City      : {}", request.getCity());
+        log.info("State     : {}", request.getState());
+        log.info("Country   : {}", request.getCountry());
+        log.info("Postal    : {}", request.getPostalCode());
+
+        log.info("========== GEOAPIFY RESPONSE ==========");
+        log.info("City      : {}", validation.getCity());
+        log.info("State     : {}", validation.getState());
+        log.info("Country   : {}", validation.getCountry());
+        log.info("Postal    : {}", validation.getPostalCode());
+        log.info("Latitude  : {}", validation.getLatitude());
+        log.info("Longitude : {}", validation.getLongitude());
+        log.info("Display   : {}", validation.getDisplayName());
+
+        if (!validation.getCity().equalsIgnoreCase(request.getCity())) {
+            throw new InvalidAddressException("City does not match validated address.");
+        }
+
+        if (!validation.getState().equalsIgnoreCase(request.getState())) {
+            throw new InvalidAddressException("State does not match validated address.");
+        }
+
+        if (!validation.getCountry().equalsIgnoreCase(request.getCountry())) {
+            throw new InvalidAddressException("Country does not match validated address.");
+        }
+
+        if (!validation.getPostalCode().equalsIgnoreCase(request.getPostalCode())) {
+            throw new InvalidAddressException("Postal code does not match validated address.");
+        }
+
+        userProfileMapper.updateAddress(address, request, validation);
 
         addressRepository.save(address);
 
@@ -232,10 +276,13 @@ public class UserProfileServiceImpl implements UserProfileService {
             List<Address> remaining =
                     addressRepository.findByUserProfileAuthUserIdOrderByCreatedAtAsc(authUserId);
 
-            Address first = remaining.get(0);
-            first.setIsDefault(true);
+            if (!remaining.isEmpty()) {
 
-            addressRepository.save(first);
+                Address first = remaining.get(0);
+                first.setIsDefault(true);
+
+                addressRepository.save(first);
+            }
         }
 
     }

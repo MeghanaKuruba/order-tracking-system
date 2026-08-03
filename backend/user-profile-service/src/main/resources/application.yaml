@@ -5,6 +5,9 @@ spring:
   application:
     name: user-profile-service
 
+  profiles:
+    active: local
+
   kafka:
     bootstrap-servers: localhost:9092
     producer:
@@ -40,11 +43,12 @@ spring:
     pattern:
       console: "%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n"
 
-osm:
-  base-url: https://nominatim.openstreetmap.org/search
-
 management:
   endpoints:
     web:
       exposure:
         include: health,info
+
+geoapify:
+  api-key: YOUR_API_KEY
+  base-url: https://api.geoapify.com/v1/geocode/search
