@@ -13,8 +13,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class GeoapifyLocationValidationService
-        implements LocationValidationService {
+public class GeoapifyLocationValidationService implements LocationValidationService {
 
     private final RestTemplate restTemplate;
 
