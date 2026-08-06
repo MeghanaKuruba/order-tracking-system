@@ -7,5 +7,6 @@ public enum VerificationStatus {
     VERIFIED,
     ACTION_REQUIRED,
     REJECTED,
-    SUSPENDED
+    SUSPENDED,
+    MANUAL_REVIEW
 }

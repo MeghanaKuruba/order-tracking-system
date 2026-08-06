@@ -1,0 +1,38 @@
+package com.ordertracking.verification.dto;
+
+import com.ordertracking.verification.enums.DocumentStatus;
+import com.ordertracking.verification.enums.DocumentType;
+import lombok.*;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class VerificationDocumentResponse {
+
+    private Long id;
+
+    private String referenceId;
+
+    private DocumentType documentType;
+
+    private String documentNumber;
+
+    private String documentUrl;
+
+    private LocalDate issuedAt;
+
+    private LocalDate expiryDate;
+
+    private DocumentStatus status;
+
+    private String rejectionReason;
+
+    private LocalDateTime uploadedAt;
+
+    private LocalDateTime verifiedAt;
+}

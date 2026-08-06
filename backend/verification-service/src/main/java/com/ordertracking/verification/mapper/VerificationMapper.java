@@ -1,7 +1,9 @@
 package com.ordertracking.verification.mapper;
 
 import com.ordertracking.verification.dto.VerificationApplicationResponse;
+import com.ordertracking.verification.dto.VerificationDocumentResponse;
 import com.ordertracking.verification.entity.VerificationApplication;
+import com.ordertracking.verification.entity.VerificationDocument;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -24,7 +26,29 @@ public class VerificationMapper {
                 .build();
     }
 
+    public VerificationDocumentResponse toVerificationDocumentResponse(
+            VerificationDocument document) {
+
+        return VerificationDocumentResponse.builder()
+                .id(document.getId())
+                .referenceId(
+                        document.getVerificationApplication()
+                                .getReferenceId()
+                )
+                .documentType(document.getDocumentType())
+                .documentNumber(document.getDocumentNumber())
+                .documentUrl(document.getDocumentUrl())
+                .issuedAt(document.getIssuedAt())
+                .expiryDate(document.getExpiryDate())
+                .status(document.getStatus())
+                .rejectionReason(document.getRejectionReason())
+                .uploadedAt(document.getUploadedAt())
+                .verifiedAt(document.getVerifiedAt())
+                .build();
+    }
+
     public String generateReferenceId() {
+
         return "VER-" +
                 UUID.randomUUID()
                         .toString()
