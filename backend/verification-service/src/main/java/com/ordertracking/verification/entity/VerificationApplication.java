@@ -6,12 +6,15 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(
         name = "verification_application",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_verification_reference_id", columnNames = "reference_id")
+                @UniqueConstraint(name = "uk_verification_reference_id",
+                        columnNames = "reference_id")
         }
 )
 @Getter
@@ -54,6 +57,16 @@ public class VerificationApplication {
     private LocalDateTime submittedAt;
 
     private LocalDateTime updatedAt;
+
+    @Builder.Default
+    @OneToMany(
+            mappedBy = "verificationApplication",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<VerificationDocument> documents =
+            new ArrayList<>();
+
 
     @PrePersist
     protected void onCreate() {

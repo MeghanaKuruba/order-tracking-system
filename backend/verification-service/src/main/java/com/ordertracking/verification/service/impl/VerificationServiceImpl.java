@@ -27,6 +27,12 @@ public class VerificationServiceImpl
     public VerificationApplicationResponse createApplication(
             CreateVerificationApplicationRequest request) {
 
+        log.info(
+                "Creating verification application. authUserId={}, applicantType={}",
+                request.getAuthUserId(),
+                request.getApplicantType()
+        );
+
         VerificationApplication application =
                 VerificationApplication.builder()
                         .authUserId(request.getAuthUserId())
@@ -51,13 +57,23 @@ public class VerificationServiceImpl
     public VerificationApplicationResponse getApplication(
             Long applicationId) {
 
+        log.debug(
+                "Fetching verification application. applicationId={}",
+                applicationId
+        );
+
         VerificationApplication application =
                 applicationRepository.findById(applicationId)
-                        .orElseThrow(() ->
-                                new VerificationApplicationNotFoundException(
-                                        "Verification application not found."
-                                )
-                        );
+                        .orElseThrow(() -> {
+                            log.warn(
+                                    "Verification application not found. applicationId={}",
+                                    applicationId
+                            );
+
+                            return new VerificationApplicationNotFoundException(
+                                    "Verification application not found."
+                            );
+                        });
 
         return verificationMapper.toVerificationAppResponse(application);
     }
@@ -66,8 +82,21 @@ public class VerificationServiceImpl
     public List<VerificationApplicationResponse>
     getApplicationsByUser(Long authUserId) {
 
-        return applicationRepository
-                .findByAuthUserId(authUserId)
+        log.debug(
+                "Fetching verification applications. authUserId={}",
+                authUserId
+        );
+
+        List<VerificationApplication> applications =
+                applicationRepository.findByAuthUserId(authUserId);
+
+        log.info(
+                "Verification applications fetched. authUserId={}, count={}",
+                authUserId,
+                applications.size()
+        );
+
+        return applications
                 .stream()
                 .map(verificationMapper::toVerificationAppResponse)
                 .toList();
