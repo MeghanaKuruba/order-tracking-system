@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Builder
 public class VerificationDocumentResponse {
 
-    private Long id;
+    private String documentId;
 
     private String referenceId;
 

@@ -32,6 +32,18 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Validation Failed", message, request);
     }
 
+    @ExceptionHandler(VerificationApplicationNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleVerificationApplicationNotFoundException(
+            VerificationApplicationNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, "Verification Application Not Found", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(VerificationDocumentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleVerificationDocumentNotFoundException(
+            VerificationDocumentNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, "Verification Document Not Found", ex.getMessage(), request);
+    }
+
     private ResponseEntity<ErrorResponse> buildErrorResponse(
             HttpStatus status, String error, String message, HttpServletRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
