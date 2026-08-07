@@ -1,7 +1,10 @@
 package com.ordertracking.verification.controller;
 
 import com.ordertracking.verification.dto.CreateVerificationApplicationRequest;
+import com.ordertracking.verification.dto.SubmitVerificationDocumentRequest;
 import com.ordertracking.verification.dto.VerificationApplicationResponse;
+import com.ordertracking.verification.dto.VerificationDocumentResponse;
+import com.ordertracking.verification.service.VerificationDocumentService;
 import com.ordertracking.verification.service.VerificationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +20,8 @@ import java.util.List;
 public class VerificationController {
 
     private final VerificationService verificationService;
+
+    private final VerificationDocumentService verificationDocumentService;
 
     @PostMapping
     public ResponseEntity<VerificationApplicationResponse> createApplication(
@@ -39,5 +44,34 @@ public class VerificationController {
             @PathVariable Long authUserId) {
 
         return ResponseEntity.ok(verificationService.getApplicationsByUser(authUserId));
+    }
+
+    @PostMapping("/{applicationId}/documents")
+    public ResponseEntity<VerificationDocumentResponse> submitDocument(
+            @PathVariable Long applicationId,
+            @Valid @RequestBody SubmitVerificationDocumentRequest request) {
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(
+                        verificationDocumentService.submitDocument(
+                                applicationId,
+                                request
+                        )
+                );
+    }
+
+    @GetMapping("/documents/{documentId}")
+    public ResponseEntity<VerificationDocumentResponse> getDocument(
+            @PathVariable String documentId) {
+
+        return ResponseEntity.ok(verificationDocumentService.getDocument(documentId));
+    }
+
+    @GetMapping("/{applicationId}/documents")
+    public ResponseEntity<List<VerificationDocumentResponse>> getDocuments(
+            @PathVariable Long applicationId) {
+
+        return ResponseEntity.ok(verificationDocumentService.getDocuments(applicationId));
     }
 }

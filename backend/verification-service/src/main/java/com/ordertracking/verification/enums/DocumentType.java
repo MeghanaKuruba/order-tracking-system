@@ -2,11 +2,11 @@ package com.ordertracking.verification.enums;
 
 public enum DocumentType {
 
-    ID_PROOF,
+    PAN,
 
     DRIVING_LICENSE,
 
-    VEHICLE_REGISTRATION,
+    VEHICLE_RC,
 
     VEHICLE_INSURANCE,
 
